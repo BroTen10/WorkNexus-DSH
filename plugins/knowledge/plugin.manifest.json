@@ -1,0 +1,27 @@
+{
+  "id": "worknexus.knowledge",
+  "name": "知识库",
+  "version": "0.1.0",
+  "type": "composite",
+  "dshCompatibility": ">=0.2.0-rc.1 <0.3.0",
+  "hostCoreCompatibility": ">=1.0.0",
+  "protected": false,
+  "permissions": [
+    "space.read",
+    "kb.retrieve",
+    "kb.bind"
+  ],
+  "uiSlots": [
+    "worknexus.knowledge.connections",
+    "worknexus.knowledge.admin"
+  ],
+  "governance": {
+    "source": "local",
+    "approval": "required"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  }
+}

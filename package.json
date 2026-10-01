@@ -1,0 +1,29 @@
+{
+  "name": "worknexus-dsh",
+  "version": "0.1.0",
+  "private": true,
+  "description": "WorkNexus-DSH 企业发行版与 Host Core 契约/插件工作区（built on DeepSeek Harness）",
+  "license": "MIT",
+  "type": "module",
+  "packageManager": "pnpm@11.25.0",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "scripts": {
+    "test": "pnpm -r --if-present run test",
+    "typecheck": "pnpm -r --if-present run typecheck",
+    "build": "pnpm -r --if-present run build"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.8"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ],
+    "ignoredBuiltDependencies": [
+      "esbuild"
+    ]
+  }
+}

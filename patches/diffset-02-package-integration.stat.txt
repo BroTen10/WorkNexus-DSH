@@ -1,0 +1,4 @@
+ apps/desktop/scripts/electron-builder-config.mjs | 12 ++++---
+ apps/desktop/scripts/prepare-package-set.ts      | 42 ++++++++++++++++++++++--
+ apps/desktop/src/project-manager.ts              | 22 ++++++++++---
+ 3 files changed, 66 insertions(+), 10 deletions(-)

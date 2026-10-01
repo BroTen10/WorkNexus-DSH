@@ -1,0 +1,3 @@
+- insert:
+    - id: worknexus-market
+      name: '@worknexus/plugin-market'

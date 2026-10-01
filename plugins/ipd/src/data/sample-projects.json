@@ -1,0 +1,32 @@
+{
+  "demo": true,
+  "label": "示例数据",
+  "projects": [
+    {
+      "id": "p-1001",
+      "name": "智能文档平台 V1",
+      "owner": "产品经理 A",
+      "currentStage": "计划阶段",
+      "updatedAt": "2026-09-20",
+      "stages": [
+        { "id": "concept", "name": "概念阶段", "status": "已完成" },
+        { "id": "plan", "name": "计划阶段", "status": "进行中" },
+        { "id": "develop", "name": "开发阶段", "status": "未开始" },
+        { "id": "release", "name": "发布阶段", "status": "未开始" }
+      ]
+    },
+    {
+      "id": "p-1002",
+      "name": "合同审查助手",
+      "owner": "产品经理 B",
+      "currentStage": "开发阶段",
+      "updatedAt": "2026-09-24",
+      "stages": [
+        { "id": "concept", "name": "概念阶段", "status": "已完成" },
+        { "id": "plan", "name": "计划阶段", "status": "已完成" },
+        { "id": "develop", "name": "开发阶段", "status": "进行中" },
+        { "id": "release", "name": "发布阶段", "status": "未开始" }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,3 @@
+- insert:
+    - id: worknexus-enterprise-admin
+      name: '@worknexus/plugin-enterprise-admin'

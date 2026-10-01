@@ -1,0 +1,531 @@
+diff --git a/apps/desktop/src/main.ts b/apps/desktop/src/main.ts
+index b4b8153b..d1bb924a 100644
+--- a/apps/desktop/src/main.ts
++++ b/apps/desktop/src/main.ts
+@@ -925,7 +925,7 @@ async function main(): Promise<void> {
+   const applicationIconPath = development ? join(app.getAppPath(), 'resources', 'icon-windows.png')
+     : join(process.resourcesPath, 'icon.png')
+   app.setAboutPanelOptions({
+-    applicationName: 'DeepSeek Harness',
++    applicationName: 'WorkNexus-DSH',
+     applicationVersion: app.getVersion(),
+     // The release has no separate build number; omit Electron's bundle version.
+     version: '',
+diff --git a/apps/desktop/tests/expected/about-panel.json b/apps/desktop/tests/expected/about-panel.json
+index 8dc6ee90..eb10bb22 100644
+--- a/apps/desktop/tests/expected/about-panel.json
++++ b/apps/desktop/tests/expected/about-panel.json
+@@ -1,11 +1,11 @@
+ {
+   "darwin:en-US": {
+     "menu": [
+-      { "label": "About DeepSeek Harness", "role": "about" },
++      { "label": "About WorkNexus-DSH", "role": "about" },
+       { "type": "separator" }
+     ],
+     "options": {
+-      "applicationName": "DeepSeek Harness",
++      "applicationName": "WorkNexus-DSH",
+       "applicationVersion": "1.0.0",
+       "version": "",
+       "copyright": "",
+@@ -14,11 +14,11 @@
+   },
+   "darwin:zh-CN": {
+     "menu": [
+-      { "label": "关于 DeepSeek Harness", "role": "about" },
++      { "label": "关于 WorkNexus-DSH", "role": "about" },
+       { "type": "separator" }
+     ],
+     "options": {
+-      "applicationName": "DeepSeek Harness",
++      "applicationName": "WorkNexus-DSH",
+       "applicationVersion": "1.0.0",
+       "version": "",
+       "copyright": "",
+@@ -27,11 +27,11 @@
+   },
+   "win32:zh-CN": {
+     "menu": [
+-      { "label": "关于 DeepSeek Harness" },
++      { "label": "关于 WorkNexus-DSH" },
+       { "type": "separator" }
+     ],
+     "options": {
+-      "applicationName": "DeepSeek Harness",
++      "applicationName": "WorkNexus-DSH",
+       "applicationVersion": "1.0.0",
+       "version": "",
+       "copyright": "",
+@@ -40,11 +40,11 @@
+   },
+   "win32:en-US": {
+     "menu": [
+-      { "label": "About DeepSeek Harness" },
++      { "label": "About WorkNexus-DSH" },
+       { "type": "separator" }
+     ],
+     "options": {
+-      "applicationName": "DeepSeek Harness",
++      "applicationName": "WorkNexus-DSH",
+       "applicationVersion": "1.0.0",
+       "version": "",
+       "copyright": "",
+diff --git a/packages/client/ui-brand-official/src/client/Brand.tsx b/packages/client/ui-brand-official/src/client/Brand.tsx
+index 9ac6dd7c..091d88fc 100644
+--- a/packages/client/ui-brand-official/src/client/Brand.tsx
++++ b/packages/client/ui-brand-official/src/client/Brand.tsx
+@@ -1,19 +1,140 @@
+-import { BrandWordmark, FishLogo } from '@deepseek-ai/dsh-client-ui-primitives'
+ import type { SidebarBrandMarkOwnerProps } from '@deepseek-ai/dsh-client-ui-sidebar/client'
+ 
+ /**
+- * Render the official mark with the presentation requested by its host surface.
++ * 企业方品牌标志（正式素材）。
++ *
++ * 素材来源：决策人 2026-09-30 提供的 8000x4500 透明 PNG（标志 + 中文名）。本组件只取**标志**部分，
++ * 中文名不进本组件 —— 字标槽仍由 `OfficialBrandName` 承担（本轮素材只替换标志）。
++ * 处理：按标志实际范围裁成 1:1 画布（等比缩入、四周约 4% 余量）后缩到 128x128。
++ * 尺寸取舍：显示尺寸为 24px（HiDPI 3x 也只需 72px），128 留足余量而体积仅约 9KB。
++ * 以 data URI 内嵌而非独立资源文件：客户端 bundle 未配置图片 loader，内嵌可**不改上游打包配置**，
++ * 也让正式素材的替换保持在单一文件内（沿用 T-107 裁决 B-4）。
++ */
++const BRAND_MARK_DATA_URI = 'data:image/png;base64,'
++  + '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'
++
++/**
++ * Render the brand mark with the presentation requested by its host surface.
+  * @param props - Host-supplied mark presentation.
+- * @returns the official whale mark.
++ * @returns the brand mark.
+  */
+ export function OfficialBrandMark({ size }: SidebarBrandMarkOwnerProps) {
+-  return <FishLogo size={size} />
++  return (
++    <svg
++      width={size}
++      height={size}
++      viewBox="0 0 128 128"
++      role="img"
++      aria-label="企业方"
++      focusable="false"
++    >
++      <image href={BRAND_MARK_DATA_URI} width={128} height={128} />
++    </svg>
++  )
+ }
+ 
+ /**
+- * Render the official name artwork without its independently slotted mark.
+- * @returns the official name wordmark.
++ * Render the WorkNexus-DSH name artwork without its independently slotted mark.
++ *
++ * 说明：本轮素材只替换标志（决策人 2026-09-30：「素材只替换蓝底 WN」），字标槽沿用上一版的内联字标。
++ * 字标槽（`sidebar.brand.name`）的载体在上游是一段 viewBox 固定的 wordmark SVG，宿主测试断言的
++ * 是**它的 viewBox**，因此保持「SVG wordmark」形态不变。
++ * @returns the WorkNexus-DSH wordmark.
+  */
+ export function OfficialBrandName() {
+-  return <BrandWordmark includeMark={false} />
++  return (
++    <svg
++      width={156}
++      height={24}
++      viewBox="0 0 156 24"
++      role="img"
++      aria-label="WorkNexus-DSH"
++      focusable="false"
++    >
++      <text
++        x={78}
++        y={16.5}
++        textAnchor="middle"
++        fontFamily="system-ui, sans-serif"
++        fontSize={13}
++        fontWeight={600}
++        fill="currentColor"
++      >
++        WorkNexus-DSH
++      </text>
++    </svg>
++  )
+ }
+diff --git a/packages/client/ui-brand-official/src/client/index.ts b/packages/client/ui-brand-official/src/client/index.ts
+index 332a5f60..45f76bc0 100644
+--- a/packages/client/ui-brand-official/src/client/index.ts
++++ b/packages/client/ui-brand-official/src/client/index.ts
+@@ -1,4 +1,4 @@
+-/** Official DeepSeek Harness occupants for the generic browser-brand slots. */
++/** WorkNexus-DSH brand occupants for the generic browser-brand slots. */
+ import type { Context as ClientContext } from '@deepseek-ai/cordis'
+ import type {} from '@deepseek-ai/dsh-client-ui-renderer/client'
+ import type {} from '@deepseek-ai/dsh-client-ui-sidebar/client'
+diff --git a/packages/client/ui-brand-official/tests/browser-plugin.client.spec.tsx b/packages/client/ui-brand-official/tests/browser-plugin.client.spec.tsx
+index 47e32068..068edbbe 100644
+--- a/packages/client/ui-brand-official/tests/browser-plugin.client.spec.tsx
++++ b/packages/client/ui-brand-official/tests/browser-plugin.client.spec.tsx
+@@ -80,7 +80,7 @@ describe('official browser-brand plugin', () => {
+ 
+   it('renders the official name independently from both requested mark sizes', () => {
+     const name = render(<OfficialBrandName />)
+-    expect(name.container.querySelector('svg')?.getAttribute('viewBox')).toBe('26 0 156 24')
++    expect(name.container.querySelector('svg')?.getAttribute('viewBox')).toBe('0 0 156 24')
+     name.unmount()
+ 
+     const mark = render(<OfficialBrandMark size={34} />)
+diff --git a/packages/client/ui-settings-account/src/client/locales.ts b/packages/client/ui-settings-account/src/client/locales.ts
+index e6f743a4..569bab18 100644
+--- a/packages/client/ui-settings-account/src/client/locales.ts
++++ b/packages/client/ui-settings-account/src/client/locales.ts
+@@ -13,7 +13,7 @@ export const en = {
+   timeoutTitle: 'Sign in timed out', timeoutDescription: 'Sign in again to continue.',
+   failureTitle: 'Could not sign in',
+   platformFailed: 'Could not complete the operation. Try again.', platformRetry: 'Retry',
+-  loading: 'Loading…', backToHarness: 'Back to DeepSeek Harness',
++  loading: 'Loading…', backToHarness: 'Back to WorkNexus-DSH',
+   settings: 'Settings', contactUs: 'Feedback', menu: 'Account menu',
+   nav: 'Account', signedIn: 'Signed in to DeepSeek', signedOut: 'Not signed in',
+   signIn: 'Sign in', signOut: 'Sign out',
+@@ -23,14 +23,14 @@ export const en = {
+   initializing: 'Starting sign in…', waiting: 'Continue in your browser',
+   completing: 'Completing sign in…', expired: 'Sign in expired. Try again.',
+   failed: 'Could not complete the operation. Try again.',
+-  settingsSignedOutTitle: 'You are not signed in to DeepSeek Harness',
+-  settingsSignedOutDescription: 'Sign in to DeepSeek Harness to get your dedicated API Key',
++  settingsSignedOutTitle: 'You are not signed in to WorkNexus-DSH',
++  settingsSignedOutDescription: 'Sign in to WorkNexus-DSH to get your dedicated API Key',
+   signInDescription: 'Use your DeepSeek account to get started.',
+   profileUnavailable: 'Account details are not available yet.',
+   balance: 'Topped-up balance', bonusBalance: 'Granted balance', balanceUnavailable: 'View on Platform', balanceSignedOut: 'Sign in to view',
+   accountInfo: 'More account information', more: 'More', usage: 'View usage', topUp: 'Top up',
+   quotaTitle: 'No balance available',
+-  quotaDescription: 'DeepSeek Harness cannot start a new task with this account when no balance is available. Would you like to top up? You can also top up later in Settings → Account.',
++  quotaDescription: 'WorkNexus-DSH cannot start a new task with this account when no balance is available. Would you like to top up? You can also top up later in Settings → Account.',
+   quotaTopUp: 'Top up',
+   bonusNoticeTitle: 'Bonus credited',
+ } as const
+@@ -48,7 +48,7 @@ export const zh: Record<AccountKey, string> = {
+   timeoutTitle: '登录已超时', timeoutDescription: '请重新登录后继续操作。',
+   failureTitle: '登录失败',
+   platformFailed: '操作未完成，请重试', platformRetry: '重试',
+-  loading: '加载中…', backToHarness: '返回 DeepSeek Harness',
++  loading: '加载中…', backToHarness: '返回 WorkNexus-DSH',
+   settings: '设置', contactUs: '意见反馈', menu: '账号菜单',
+   nav: '账号与余额', signedIn: '已登录 DeepSeek', signedOut: '尚未登录',
+   signIn: '登录', signOut: '退出登录',
+@@ -58,14 +58,14 @@ export const zh: Record<AccountKey, string> = {
+   initializing: '正在发起登录…', waiting: '请在浏览器中继续',
+   completing: '正在完成登录…', expired: '登录已过期，请重试。',
+   failed: '操作未完成，请重试。',
+-  settingsSignedOutTitle: '当前未登录 DeepSeek Harness 账号',
+-  settingsSignedOutDescription: '登录 DeepSeek Harness 账号获取专属 API Key',
++  settingsSignedOutTitle: '当前未登录 WorkNexus-DSH 账号',
++  settingsSignedOutDescription: '登录 WorkNexus-DSH 账号获取专属 API Key',
+   signInDescription: '登录 DeepSeek 账号以开始使用',
+   profileUnavailable: '账号资料暂不可用',
+   balance: '充值余额', bonusBalance: '赠金余额', balanceUnavailable: '前往开放平台查看', balanceSignedOut: '登录后查看',
+   accountInfo: '更多账号信息', more: '更多', usage: '查询用量', topUp: '充值',
+   quotaTitle: '当前无可用余额',
+-  quotaDescription: '没有可用额度时，DeepSeek Harness 无法开始新的任务，是否前往充值？或者可以稍后前往 设置 → 账号与余额 进行充值。',
++  quotaDescription: '没有可用额度时，WorkNexus-DSH 无法开始新的任务，是否前往充值？或者可以稍后前往 设置 → 账号与余额 进行充值。',
+   quotaTopUp: '去充值',
+   bonusNoticeTitle: '赠金已到账',
+ }
+diff --git a/packages/client/ui-settings-account/src/client/locales/onboarding.ts b/packages/client/ui-settings-account/src/client/locales/onboarding.ts
+index 50998644..c6c8670a 100644
+--- a/packages/client/ui-settings-account/src/client/locales/onboarding.ts
++++ b/packages/client/ui-settings-account/src/client/locales/onboarding.ts
+@@ -2,11 +2,11 @@
+ export const onboardingCopy = {
+   onboardingArtworkLocale: 'zh',
+   onboardingWelcome: '欢迎使用',
+-  onboardingBrand: 'DeepSeek Harness',
+-  onboardingIntroduction: 'DeepSeek Harness 会以本地文件夹作为工作区，通过调用各种工具，读写本机文件，完成搜索整理资料、制作文档表格、编写代码、排查问题等各种任务。',
++  onboardingBrand: 'WorkNexus-DSH',
++  onboardingIntroduction: 'WorkNexus-DSH 会以本地文件夹作为工作区，通过调用各种工具，读写本机文件，完成搜索整理资料、制作文档表格、编写代码、排查问题等各种任务。',
+   onboardingStart: '开始设置',
+   onboardingCredit: '准备可用额度',
+-  onboardingCreditDescription: 'DeepSeek Harness 执行任务时，会根据模型与工具使用的 token 量扣除额度。请提前添加额度，避免任务在执行过程中被迫中断。你的余额只会在 Agent 实际执行任务时消耗。',
++  onboardingCreditDescription: 'WorkNexus-DSH 执行任务时，会根据模型与工具使用的 token 量扣除额度。请提前添加额度，避免任务在执行过程中被迫中断。你的余额只会在 Agent 实际执行任务时消耗。',
+   onboardingTopUp: '去充值',
+   onboardingLater: '下一步',
+   onboardingFundedTopUp: '去充值',
+@@ -19,7 +19,7 @@ export const onboardingCopy = {
+   onboardingDevelopmentDescription: '修改代码、调试问题、运行命令和管理项目文件等',
+   onboardingContinue: '继续',
+   onboardingProcess: '你希望看到多少工作过程？',
+-  onboardingProcessDescription: '这只会影响工作过程的展示方式，不会影响 DeepSeek Harness 的工作能力。',
++  onboardingProcessDescription: '这只会影响工作过程的展示方式，不会影响 WorkNexus-DSH 的工作能力。',
+   onboardingCompact: '聚焦结果',
+   onboardingCompactDescription: '只看结果，保持界面简洁明了',
+   onboardingStandard: '关键细节',
+@@ -33,7 +33,7 @@ export const onboardingCopy = {
+   onboardingSkipDescription: '你可以随时前往 设置 → 通用设置 中调整工作过程、性能与用量展示方式或开启代码工作工具。',
+   onboardingKeepSetting: '继续设置',
+   onboardingNoCreditTitle: '暂时跳过充值？',
+-  onboardingNoCreditDescription: '没有可用额度时，DeepSeek Harness 将无法开始新的任务。你可以稍后前往 设置 → 账号与余额 进行充值。',
++  onboardingNoCreditDescription: '没有可用额度时，WorkNexus-DSH 将无法开始新的任务。你可以稍后前往 设置 → 账号与余额 进行充值。',
+   onboardingUnderstood: '我知道了',
+   onboardingGoTopUp: '前往充值',
+   onboardingSaveFailed: '未能保存设置，请重试。',
+@@ -45,11 +45,11 @@ export const onboardingCopy = {
+ export const onboardingEnglishCopy: Record<keyof typeof onboardingCopy, string> = {
+   onboardingArtworkLocale: 'en',
+   onboardingWelcome: 'Welcome to',
+-  onboardingBrand: 'DeepSeek Harness',
+-  onboardingIntroduction: 'DeepSeek Harness works in a local folder and uses tools to read and write files on your computer. It can help you research and organize information, create documents and spreadsheets, write code, troubleshoot issues, and more.',
++  onboardingBrand: 'WorkNexus-DSH',
++  onboardingIntroduction: 'WorkNexus-DSH works in a local folder and uses tools to read and write files on your computer. It can help you research and organize information, create documents and spreadsheets, write code, troubleshoot issues, and more.',
+   onboardingStart: 'Get started',
+   onboardingCredit: 'Add credits',
+-  onboardingCreditDescription: 'DeepSeek Harness charges credits based on the tokens used by models and tools. Add credits in advance to keep your tasks running without interruption. Your balance is only used while the agent is working on a task.',
++  onboardingCreditDescription: 'WorkNexus-DSH charges credits based on the tokens used by models and tools. Add credits in advance to keep your tasks running without interruption. Your balance is only used while the agent is working on a task.',
+   onboardingTopUp: 'Add credits',
+   onboardingLater: 'Next',
+   onboardingFundedTopUp: 'Add credits',
+@@ -62,7 +62,7 @@ export const onboardingEnglishCopy: Record<keyof typeof onboardingCopy, string>
+   onboardingDevelopmentDescription: 'Edit code, debug issues, run commands, manage project files, and more',
+   onboardingContinue: 'Continue',
+   onboardingProcess: 'How much detail would you like to see?',
+-  onboardingProcessDescription: 'This only changes how progress is shown, not what DeepSeek Harness can do.',
++  onboardingProcessDescription: 'This only changes how progress is shown, not what WorkNexus-DSH can do.',
+   onboardingCompact: 'Results only',
+   onboardingCompactDescription: 'See just the results in a clean, simple interface',
+   onboardingStandard: 'Key details',
+@@ -76,7 +76,7 @@ export const onboardingEnglishCopy: Record<keyof typeof onboardingCopy, string>
+   onboardingSkipDescription: 'You can change how progress, performance, and usage are displayed, or enable Coding Tools, anytime in Settings → General.',
+   onboardingKeepSetting: 'Continue setup',
+   onboardingNoCreditTitle: 'Skip adding credits?',
+-  onboardingNoCreditDescription: 'DeepSeek Harness can’t start new tasks without credits. You can add them later in Settings → Account.',
++  onboardingNoCreditDescription: 'WorkNexus-DSH can’t start new tasks without credits. You can add them later in Settings → Account.',
+   onboardingUnderstood: 'Got it',
+   onboardingGoTopUp: 'Add credits',
+   onboardingSaveFailed: 'Could not save settings. Try again.',
+diff --git a/packages/client/ui-settings-account/tests/expected/account-signed-out-en.txt b/packages/client/ui-settings-account/tests/expected/account-signed-out-en.txt
+index cd48fe8f..a27ac59b 100644
+--- a/packages/client/ui-settings-account/tests/expected/account-signed-out-en.txt
++++ b/packages/client/ui-settings-account/tests/expected/account-signed-out-en.txt
+@@ -1 +1 @@
+-You are not signed in to DeepSeek HarnessSign in to DeepSeek Harness to get your dedicated API KeySign in
++You are not signed in to WorkNexus-DSHSign in to WorkNexus-DSH to get your dedicated API KeySign in
+diff --git a/packages/client/ui-settings-account/tests/expected/account-signed-out-zh.txt b/packages/client/ui-settings-account/tests/expected/account-signed-out-zh.txt
+index 5b0aef47..4d3611c4 100644
+--- a/packages/client/ui-settings-account/tests/expected/account-signed-out-zh.txt
++++ b/packages/client/ui-settings-account/tests/expected/account-signed-out-zh.txt
+@@ -1 +1 @@
+-当前未登录 DeepSeek Harness 账号登录 DeepSeek Harness 账号获取专属 API Key登录
++当前未登录 WorkNexus-DSH 账号登录 WorkNexus-DSH 账号获取专属 API Key登录
+diff --git a/packages/client/ui-settings-account/tests/expected/onboarding-credit-en.txt b/packages/client/ui-settings-account/tests/expected/onboarding-credit-en.txt
+index 64b6e70d..3e1eda92 100644
+--- a/packages/client/ui-settings-account/tests/expected/onboarding-credit-en.txt
++++ b/packages/client/ui-settings-account/tests/expected/onboarding-credit-en.txt
+@@ -1 +1 @@
+-Add creditsDeepSeek Harness charges credits based on the tokens used by models and tools. Add credits in advance to keep your tasks running without interruption. Your balance is only used while the agent is working on a task.Add creditsNextBackSkip
++Add creditsWorkNexus-DSH charges credits based on the tokens used by models and tools. Add credits in advance to keep your tasks running without interruption. Your balance is only used while the agent is working on a task.Add creditsNextBackSkip
+diff --git a/packages/client/ui-settings-account/tests/expected/onboarding-credit.txt b/packages/client/ui-settings-account/tests/expected/onboarding-credit.txt
+index c54258b3..1b3e67af 100644
+--- a/packages/client/ui-settings-account/tests/expected/onboarding-credit.txt
++++ b/packages/client/ui-settings-account/tests/expected/onboarding-credit.txt
+@@ -1 +1 @@
+-准备可用额度DeepSeek Harness 执行任务时，会根据模型与工具使用的 token 量扣除额度。请提前添加额度，避免任务在执行过程中被迫中断。你的余额只会在 Agent 实际执行任务时消耗。去充值下一步上一步跳过
++准备可用额度WorkNexus-DSH 执行任务时，会根据模型与工具使用的 token 量扣除额度。请提前添加额度，避免任务在执行过程中被迫中断。你的余额只会在 Agent 实际执行任务时消耗。去充值下一步上一步跳过
+diff --git a/packages/client/ui-settings-account/tests/expected/onboarding-process-en.txt b/packages/client/ui-settings-account/tests/expected/onboarding-process-en.txt
+index acbae343..c4d8749c 100644
+--- a/packages/client/ui-settings-account/tests/expected/onboarding-process-en.txt
++++ b/packages/client/ui-settings-account/tests/expected/onboarding-process-en.txt
+@@ -1 +1 @@
+-How much detail would you like to see?This only changes how progress is shown, not what DeepSeek Harness can do.Results onlySee just the results in a clean, simple interfaceKey detailsFocus on results, with only the most important steps and actions shownFull detailsSee the full process for easier debugging and troubleshootingBackSkip
++How much detail would you like to see?This only changes how progress is shown, not what WorkNexus-DSH can do.Results onlySee just the results in a clean, simple interfaceKey detailsFocus on results, with only the most important steps and actions shownFull detailsSee the full process for easier debugging and troubleshootingBackSkip
+diff --git a/packages/client/ui-settings-account/tests/expected/onboarding-process.txt b/packages/client/ui-settings-account/tests/expected/onboarding-process.txt
+index ee8a3043..06e0e039 100644
+--- a/packages/client/ui-settings-account/tests/expected/onboarding-process.txt
++++ b/packages/client/ui-settings-account/tests/expected/onboarding-process.txt
+@@ -1 +1 @@
+-你希望看到多少工作过程？这只会影响工作过程的展示方式，不会影响 DeepSeek Harness 的工作能力。聚焦结果只看结果，保持界面简洁明了关键细节结果优先，仅展示重要步骤和关键操作完整过程查看完整工作过程，方便调试和排查问题上一步跳过
++你希望看到多少工作过程？这只会影响工作过程的展示方式，不会影响 WorkNexus-DSH 的工作能力。聚焦结果只看结果，保持界面简洁明了关键细节结果优先，仅展示重要步骤和关键操作完整过程查看完整工作过程，方便调试和排查问题上一步跳过
+diff --git a/packages/client/ui-settings-account/tests/expected/onboarding-purpose-en.txt b/packages/client/ui-settings-account/tests/expected/onboarding-purpose-en.txt
+index d14830b1..39fbdede 100644
+--- a/packages/client/ui-settings-account/tests/expected/onboarding-purpose-en.txt
++++ b/packages/client/ui-settings-account/tests/expected/onboarding-purpose-en.txt
+@@ -1 +1 @@
+-What would you like DeepSeek Harness to help with?We’ll tailor the interface and tools to fit the way you work.Office & creative workEdit documents, organize data, create presentations, and moreCoding & developmentEdit code, debug issues, run commands, manage project files, and moreBackSkip
++What would you like WorkNexus-DSH to help with?We’ll tailor the interface and tools to fit the way you work.Office & creative workEdit documents, organize data, create presentations, and moreCoding & developmentEdit code, debug issues, run commands, manage project files, and moreBackSkip
+diff --git a/packages/client/ui-settings-account/tests/expected/onboarding-purpose.txt b/packages/client/ui-settings-account/tests/expected/onboarding-purpose.txt
+index 89c09d75..51caec3b 100644
+--- a/packages/client/ui-settings-account/tests/expected/onboarding-purpose.txt
++++ b/packages/client/ui-settings-account/tests/expected/onboarding-purpose.txt
+@@ -1 +1 @@
+-你希望 DeepSeek Harness 帮你做什么？我们会根据你的选择调整界面和工具，以更适合你的工作方式。办公与创作编辑文档、整理数据和制作演示文稿等代码与开发修改代码、调试问题、运行命令和管理项目文件等上一步跳过
++你希望 WorkNexus-DSH 帮你做什么？我们会根据你的选择调整界面和工具，以更适合你的工作方式。办公与创作编辑文档、整理数据和制作演示文稿等代码与开发修改代码、调试问题、运行命令和管理项目文件等上一步跳过
+diff --git a/packages/client/ui-settings-account/tests/expected/onboarding-welcome-en.txt b/packages/client/ui-settings-account/tests/expected/onboarding-welcome-en.txt
+index 727b3ab9..51088fb8 100644
+--- a/packages/client/ui-settings-account/tests/expected/onboarding-welcome-en.txt
++++ b/packages/client/ui-settings-account/tests/expected/onboarding-welcome-en.txt
+@@ -1 +1 @@
+-Welcome to DeepSeek HarnessDeepSeek Harness works in a local folder and uses tools to read and write files on your computer. It can help you research and organize information, create documents and spreadsheets, write code, troubleshoot issues, and more.Get started
++Welcome to WorkNexus-DSHWorkNexus-DSH works in a local folder and uses tools to read and write files on your computer. It can help you research and organize information, create documents and spreadsheets, write code, troubleshoot issues, and more.Get started
+diff --git a/packages/client/ui-settings-account/tests/expected/onboarding-welcome.txt b/packages/client/ui-settings-account/tests/expected/onboarding-welcome.txt
+index b2958555..55334685 100644
+--- a/packages/client/ui-settings-account/tests/expected/onboarding-welcome.txt
++++ b/packages/client/ui-settings-account/tests/expected/onboarding-welcome.txt
+@@ -1 +1 @@
+-欢迎使用 DeepSeek HarnessDeepSeek Harness 会以本地文件夹作为工作区，通过调用各种工具，读写本机文件，完成搜索整理资料、制作文档表格、编写代码、排查问题等各种任务。开始设置
++欢迎使用 WorkNexus-DSHWorkNexus-DSH 会以本地文件夹作为工作区，通过调用各种工具，读写本机文件，完成搜索整理资料、制作文档表格、编写代码、排查问题等各种任务。开始设置
+diff --git a/packages/client/ui-settings-account/tests/expected/platform-error-en.txt b/packages/client/ui-settings-account/tests/expected/platform-error-en.txt
+index 5be84a7a..f18744c5 100644
+--- a/packages/client/ui-settings-account/tests/expected/platform-error-en.txt
++++ b/packages/client/ui-settings-account/tests/expected/platform-error-en.txt
+@@ -1 +1 @@
+-Back to DeepSeek HarnessCould not complete the operation. Try again.Retry
++Back to WorkNexus-DSHCould not complete the operation. Try again.Retry
+diff --git a/packages/client/ui-settings-account/tests/expected/platform-error-zh.txt b/packages/client/ui-settings-account/tests/expected/platform-error-zh.txt
+index f94e9c18..a99819b0 100644
+--- a/packages/client/ui-settings-account/tests/expected/platform-error-zh.txt
++++ b/packages/client/ui-settings-account/tests/expected/platform-error-zh.txt
+@@ -1 +1 @@
+-返回 DeepSeek Harness操作未完成，请重试重试
++返回 WorkNexus-DSH操作未完成，请重试重试
+diff --git a/packages/client/ui-settings-account/tests/expected/platform-header-en.txt b/packages/client/ui-settings-account/tests/expected/platform-header-en.txt
+index e3d205fe..62abb7d1 100644
+--- a/packages/client/ui-settings-account/tests/expected/platform-header-en.txt
++++ b/packages/client/ui-settings-account/tests/expected/platform-header-en.txt
+@@ -1 +1 @@
+-Back to DeepSeek Harness
++Back to WorkNexus-DSH
+diff --git a/packages/client/ui-settings-account/tests/expected/platform-header-zh.txt b/packages/client/ui-settings-account/tests/expected/platform-header-zh.txt
+index 9bcbb24b..0e23fe62 100644
+--- a/packages/client/ui-settings-account/tests/expected/platform-header-zh.txt
++++ b/packages/client/ui-settings-account/tests/expected/platform-header-zh.txt
+@@ -1 +1 @@
+-返回 DeepSeek Harness
++返回 WorkNexus-DSH
+diff --git a/packages/client/ui-settings-models/src/client/locales.ts b/packages/client/ui-settings-models/src/client/locales.ts
+index 0ece7ada..9bf8db15 100644
+--- a/packages/client/ui-settings-models/src/client/locales.ts
++++ b/packages/client/ui-settings-models/src/client/locales.ts
+@@ -106,7 +106,7 @@ export const en = {
+   create: 'Create provider',
+   creating: 'Creating\u2026',
+   welcomeTitle: 'Preview Notice',
+-  welcomeBody: 'DeepSeek Harness 0.2 is still in preview, and many areas need continued improvement and refinement. We welcome feedback and suggestions from all developers and users. The new desktop app now targets a broad range of users, while developer-related advanced features can be enabled in the settings. DeepSeek Harness’s product features and plugin APIs are expected to continue rapid iteration and evolution, and will gradually stabilize over time.\n\nWe look forward to exploring the limits of intelligence together with users and developers around the world, building on open-source, reusable, and composable infrastructure. We welcome everyone to bring their ideas to life with DeepSeek Harness and participate in the community to enrich the plugin ecosystem.',
++  welcomeBody: 'WorkNexus-DSH 0.2 is still in preview, and many areas need continued improvement and refinement. We welcome feedback and suggestions from all developers and users. The new desktop app now targets a broad range of users, while developer-related advanced features can be enabled in the settings. WorkNexus-DSH’s product features and plugin APIs are expected to continue rapid iteration and evolution, and will gradually stabilize over time.\n\nWe look forward to exploring the limits of intelligence together with users and developers around the world, building on open-source, reusable, and composable infrastructure. We welcome everyone to bring their ideas to life with WorkNexus-DSH and participate in the community to enrich the plugin ecosystem.',
+   welcomeContinue: 'Continue',
+   welcomeError: 'The acknowledgement could not be saved. Please try again.',
+   onboardingTitle: 'Add an API key to get started',
+@@ -226,7 +226,7 @@ export const zh: { [Key in keyof typeof en]: string } = {
+   create: '创建提供商',
+   creating: '创建中\u2026',
+   welcomeTitle: '预览版说明',
+-  welcomeBody: 'DeepSeek Harness 目前的 0.2 版本仍处于预览阶段，还有许多地方需要持续改进和打磨，希望听取广大开发者和用户的反馈建议。现在，新的桌面端面向广泛用户，开发者相关的进阶功能可在配置中开启使用。预计 DeepSeek Harness 的产品功能以及插件 API 都会继续快速迭代、持续演化，并逐渐趋于稳定。\n\n我们期待与全球用户和开发者一起，在开源、可复用、可组合的基础设施之上，共同探索智能上限。欢迎大家用 DeepSeek Harness 将想法变成现实，与社区一起丰富插件生态。',
++  welcomeBody: 'WorkNexus-DSH 目前的 0.2 版本仍处于预览阶段，还有许多地方需要持续改进和打磨，希望听取广大开发者和用户的反馈建议。现在，新的桌面端面向广泛用户，开发者相关的进阶功能可在配置中开启使用。预计 WorkNexus-DSH 的产品功能以及插件 API 都会继续快速迭代、持续演化，并逐渐趋于稳定。\n\n我们期待与全球用户和开发者一起，在开源、可复用、可组合的基础设施之上，共同探索智能上限。欢迎大家用 WorkNexus-DSH 将想法变成现实，与社区一起丰富插件生态。',
+   welcomeContinue: '继续',
+   welcomeError: '暂时无法保存确认状态，请重试。',
+   onboardingTitle: '添加一个 API Key 开始使用',
+diff --git a/packages/client/ui-settings-models/tests/welcome-notice.client.spec.tsx b/packages/client/ui-settings-models/tests/welcome-notice.client.spec.tsx
+index 82794a04..0831f074 100644
+--- a/packages/client/ui-settings-models/tests/welcome-notice.client.spec.tsx
++++ b/packages/client/ui-settings-models/tests/welcome-notice.client.spec.tsx
+@@ -107,7 +107,7 @@ describe('WelcomeNotice', () => {
+   it('uses the exact owner copy in both GUI locales', () => {
+     expect(WELCOME_NOTICE_COPY.en).toEqual({
+       title: 'Preview Notice',
+-      body: 'DeepSeek Harness 0.2 is still in preview, and many areas need continued improvement and refinement. We welcome feedback and suggestions from all developers and users. The new desktop app now targets a broad range of users, while developer-related advanced features can be enabled in the settings. DeepSeek Harness’s product features and plugin APIs are expected to continue rapid iteration and evolution, and will gradually stabilize over time.\n\nWe look forward to exploring the limits of intelligence together with users and developers around the world, building on open-source, reusable, and composable infrastructure. We welcome everyone to bring their ideas to life with DeepSeek Harness and participate in the community to enrich the plugin ecosystem.',
++      body: 'WorkNexus-DSH 0.2 is still in preview, and many areas need continued improvement and refinement. We welcome feedback and suggestions from all developers and users. The new desktop app now targets a broad range of users, while developer-related advanced features can be enabled in the settings. WorkNexus-DSH’s product features and plugin APIs are expected to continue rapid iteration and evolution, and will gradually stabilize over time.\n\nWe look forward to exploring the limits of intelligence together with users and developers around the world, building on open-source, reusable, and composable infrastructure. We welcome everyone to bring their ideas to life with WorkNexus-DSH and participate in the community to enrich the plugin ecosystem.',
+       continueLabel: 'Continue',
+     })
+     expect(en.welcomeBody).toBe(WELCOME_NOTICE_COPY.en.body)
+diff --git a/packages/client/ui-sidebar-documentpreview/src/client/office/locales.ts b/packages/client/ui-sidebar-documentpreview/src/client/office/locales.ts
+index e6562604..44a0f03d 100644
+--- a/packages/client/ui-sidebar-documentpreview/src/client/office/locales.ts
++++ b/packages/client/ui-sidebar-documentpreview/src/client/office/locales.ts
+@@ -8,7 +8,7 @@ export const zh = {
+   missingFontsDescription: '本次预览无法使用以下字体，预览中的文字和排版可能与原文档不同。',
+   missingFontsCount: '{count} 种字体',
+   closeDetails: '关闭字体详情',
+-  unavailable: 'Office 预览不可用。请在运行 DeepSeek Harness 的主机上启用文档预览服务。',
++  unavailable: 'Office 预览不可用。请在运行 WorkNexus-DSH 的主机上启用文档预览服务。',
+   invalid: '无法预览此 Office 文件。文件可能已损坏、受密码保护，或与扩展名不符。',
+   tooLarge: 'Office 文件或转换后的 PDF 超过预览大小上限，请缩小文件或调整预览配置。',
+   failed: 'Office 转换失败，未生成可用的 PDF。请检查该文件后重试。',
+@@ -30,7 +30,7 @@ export const en = {
+   missingFontsDescription: 'These fonts are unavailable for this preview. Text and layout may differ from the original document.',
+   missingFontsCount: 'Fonts: {count}',
+   closeDetails: 'Close font details',
+-  unavailable: 'Office previews are unavailable. Enable the document preview service on the computer running DeepSeek Harness.',
++  unavailable: 'Office previews are unavailable. Enable the document preview service on the computer running WorkNexus-DSH.',
+   invalid: 'This Office file cannot be previewed. It may be damaged, password protected, or have the wrong extension.',
+   tooLarge: 'The Office file or converted PDF exceeds the preview size limit. Reduce the file size or adjust the preview configuration.',
+   failed: 'Office conversion did not produce a usable PDF. Check the file and try again.',

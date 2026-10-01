@@ -1,0 +1,7 @@
+ apps/desktop/.env.macos.example                            | 4 ++++
+ apps/desktop/.env.windows.example                          | 4 ++++
+ apps/desktop/scripts/desktop-auto-update-environment.mjs   | 6 ++++--
+ apps/desktop/tests/desktop-auto-update-environment.spec.ts | 5 ++++-
+ apps/desktop/tests/desktop-upload-plan.spec.ts             | 8 +++++---
+ apps/desktop/tests/expected/latest-installer-uploads.json  | 6 +++---
+ 6 files changed, 24 insertions(+), 9 deletions(-)

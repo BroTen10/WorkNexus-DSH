@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: public.ecr.aws/docker/library/postgres:17-alpine
+    container_name: worknexus-dsh-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-worknexus}
+      POSTGRES_USER: ${POSTGRES_USER:-worknexus}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-worknexus_dev_password}
+    ports:
+      - "${POSTGRES_HOST_PORT:-15432}:5432"
+    volumes:
+      - worknexus_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-worknexus} -d ${POSTGRES_DB:-worknexus}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+volumes:
+  worknexus_pgdata:

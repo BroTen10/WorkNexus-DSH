@@ -1,0 +1,68 @@
+diff --git a/packages/client/ui-settings-account/README.md b/packages/client/ui-settings-account/README.md
+index 18604436..d8d5d5f9 100644
+--- a/packages/client/ui-settings-account/README.md
++++ b/packages/client/ui-settings-account/README.md
+@@ -40,7 +40,7 @@ Desktop usage, top-up, and onboarding recharge actions open one isolated native
+ 
+ Chat offers each live quota failure from a bound Session to the frame-wide `shell.quota-notice` chain from its host in `shell.overlay`, so the notice outlives the Chat panel that reported it. The account entry claims `ACCOUNT_QUOTA`: while an account credential is stored and the shared host entry exists, the Modal offers Cancel and Top up. While a page requested through the shared request channel is showing, the native view covers this document, so the entry paints neither the Modal nor the Toast. A quota failure that arrives while a Settings-opened page is already showing is not retained: it stays subject to newest-notice replacement, and the Modal appears after the viewer returns while that notice is still current. That Modal reports the failure of the original request, not the account's current balance: the top-up re-read is a separate read, and returning neither proves a successful payment nor dismisses the notice on its own. The notice's own Top up is the retained case: it calls `keepOpen()` and requests the `top-up` page through the shared request channel, keeping that notice and its page mounted through later quota failures. With the shared host entry the entry waits for the first account snapshot instead of rendering a Toast that its own timer could discard; a snapshot that reports no stored credential, or a failed account stream with no snapshot, then renders the same neutral warning Toast itself, and without that host entry the entry renders that Toast immediately, instead of relying on the chat host fallback. The entry owns the hold and its page request and releases both when it unmounts, so a later quota failure publishes again without replaying the dropped ones; dismissal or sign-out clears the hold and the page request. Close, Cancel, a sign-out, or leaving the notice's own embedded page takes the notice down without retrying the request.
+ 
+-The account menu's Feedback entry opens the Feishu questionnaire in the system browser. Every click samples its context then: the account UID when the profile is ready and carries an id, the build version as harness_version, the UI locale, the physical screen resolution, and device_info. Each context field also carries hide_*=1, stale prefill values for these fields are dropped from the configured form URL first, including uid, device_info and harness_version regardless of the configured URL. Tokens and masked contact details stay out, and a signed-out, still-loading, or failed profile leaves prefill_uid out. When the Desktop bridge has no deviceInfo reader, the form opens with navigator.userAgent. Desktop exposes the optional dshDesktop.deviceInfo reader, whose field format the [Desktop README](../../../apps/desktop/README.md) owns; its answer replaces the user agent, a failed read opens the form with device_info empty instead of dropping the report, and device_info describes the reported environment rather than a hardware model. Configure contactFormUrl on the ui-settings-account plugin to select another HTTPS form; contactSource defaults to empty until the questionnaire supports a Harness source option.
++The account menu's Feedback entry opens the configured HTTPS feedback destination in the system browser (this distribution points it at the enterprise site). Every click samples its context then: the account UID when the profile is ready and carries an id, the build version as harness_version, the UI locale, the physical screen resolution, and device_info. Each context field also carries hide_*=1, stale prefill values for these fields are dropped from the configured form URL first, including uid, device_info and harness_version regardless of the configured URL. Tokens and masked contact details stay out, and a signed-out, still-loading, or failed profile leaves prefill_uid out. When the Desktop bridge has no deviceInfo reader, the form opens with navigator.userAgent. Desktop exposes the optional dshDesktop.deviceInfo reader, whose field format the [Desktop README](../../../apps/desktop/README.md) owns; its answer replaces the user agent, a failed read opens the form with device_info empty instead of dropping the report, and device_info describes the reported environment rather than a hardware model. Configure contactFormUrl on the ui-settings-account plugin to select another HTTPS destination; contactSource defaults to empty until the questionnaire supports a Harness source option.
+ 
+ Account profile and balance cards share the [settings card material and radius](../../../docs/web-styling.md#corner-radii-and-settings-cards). Usage and top-up links match standard Button geometry; authorization actions use the shared Button.
+ 
+diff --git a/packages/client/ui-settings-account/README.zh.md b/packages/client/ui-settings-account/README.zh.md
+index ccc6daae..bee996a1 100644
+--- a/packages/client/ui-settings-account/README.zh.md
++++ b/packages/client/ui-settings-account/README.zh.md
+@@ -40,7 +40,7 @@ Desktop 的用量、充值与引导充值操作在 48px 返回栏下方打开同
+ 
+ Chat 通过 `shell.overlay` 中的宿主把已绑定 Session 的实时欠费交给全局 `shell.quota-notice` 链，提示的生命周期因此长于上报它的 Chat 面板。账号条目认领 `ACCOUNT_QUOTA`：已存储账号凭证且存在共享宿主条目时，Modal 提供取消和去充值。只要通过该共享请求通道请求的页面正在显示，原生视图就会盖住本页，因此该条目既不绘制 Modal 也不绘制 Toast。在 Account 设置页已打开页面的情况下新到达的欠费不会被保持：它仍受最新提示替换规则约束，返回后若该提示仍是最新一条就显示 Modal。该 Modal 报告的是原始请求的失败，而不是账号当前余额：返回时的重读是一次独立读取，返回本身既不证明支付成功，也不会自动撤下该提示。提示自身的去充值属于被保持的情形：它调用 `keepOpen()` 并通过共享请求通道申请 `top-up` 页面，使该提示与其页面在后续欠费期间保持挂载。存在共享宿主条目时，该条目会等待首个账号快照，而不是渲染一个可能被自身计时器丢弃的 Toast；快照报告未存储凭证，或账号流失败且无快照时，才由该条目自行渲染同一段中立警告 Toast，缺少该宿主条目时则立即渲染该 Toast，而不依赖 Chat 宿主回退。该条目持有保持与页面请求，并在自身卸载时释放二者，因此后续欠费会重新发布而不重放已丢弃的提示；关闭与退出登录也会清除保持和页面请求。关闭、取消、退出登录或离开该提示自己的内嵌页面都会撤下提示，且不会重试请求。
+ 
+-账号菜单的“意见反馈”入口在系统浏览器中打开飞书问卷。每次点击都按当时的上下文取值：profile ready 且带 id 时的账号 UID、以 harness_version 表示的构建版本、界面语言、屏幕物理分辨率，以及 device_info。所有上下文字段同时设置 hide_*=1，配置的表单 URL 中这些字段的 stale prefill 参数先被清除，uid、device_info 与 harness_version 的隐藏参数不依赖配置 URL 的取值。不传 token 或脱敏联系方式；未登录、profile 仍在加载或读取失败时都不填写 prefill_uid。Desktop 桥接没有 deviceInfo 读取器时，打开的表单以 navigator.userAgent 作为 device_info。Desktop 端暴露可选的 dshDesktop.deviceInfo 读取器，其字段格式由 [Desktop README](../../../apps/desktop/README.zh.md) 负责；该读取器的结果取代 user-agent，读取失败时仍打开表单、仅 device_info 留空，而 device_info 描述的是上报的环境而非硬件型号。可在 ui-settings-account 插件配置 contactFormUrl，切换到另一个 HTTPS 问卷；问卷支持 Harness 来源选项前，contactSource 默认为空。
++账号菜单的“意见反馈”入口在系统浏览器中打开配置的 HTTPS 反馈目标站点（本发行版指向企业站点）。每次点击都按当时的上下文取值：profile ready 且带 id 时的账号 UID、以 harness_version 表示的构建版本、界面语言、屏幕物理分辨率，以及 device_info。所有上下文字段同时设置 hide_*=1，配置的表单 URL 中这些字段的 stale prefill 参数先被清除，uid、device_info 与 harness_version 的隐藏参数不依赖配置 URL 的取值。不传 token 或脱敏联系方式；未登录、profile 仍在加载或读取失败时都不填写 prefill_uid。Desktop 桥接没有 deviceInfo 读取器时，打开的表单以 navigator.userAgent 作为 device_info。Desktop 端暴露可选的 dshDesktop.deviceInfo 读取器，其字段格式由 [Desktop README](../../../apps/desktop/README.zh.md) 负责；该读取器的结果取代 user-agent，读取失败时仍打开表单、仅 device_info 留空，而 device_info 描述的是上报的环境而非硬件型号。可在 ui-settings-account 插件配置 contactFormUrl，切换到另一个 HTTPS 目标站点；问卷支持 Harness 来源选项前，contactSource 默认为空。
+ 
+ 账号资料与余额卡片共用[设置卡片材质与圆角](../../../docs/web-styling.zh.md#corner-radii-and-settings-cards)。用量与充值链接与标准 Button 尺寸一致；授权操作使用公共 Button。
+ 
+diff --git a/packages/client/ui-settings-account/src/contact-config.ts b/packages/client/ui-settings-account/src/contact-config.ts
+index b1afcbf0..e4370104 100644
+--- a/packages/client/ui-settings-account/src/contact-config.ts
++++ b/packages/client/ui-settings-account/src/contact-config.ts
+@@ -3,7 +3,7 @@ import z from '@deepseek-ai/schemastery'
+ 
+ /** Questionnaire destination and bonus notice timings shared by Host and Client. */
+ export interface ContactConfig {
+-  /** HTTPS questionnaire URL; override for a test form. */
++  /** HTTPS destination opened by the account menu's feedback entry; override for a test destination. */
+   contactFormUrl: string
+   /** Questionnaire source option; empty until Harness is supported by the form. */
+   contactSource: string
+@@ -14,7 +14,8 @@ export interface ContactConfig {
+ }
+ /** Validate public questionnaire options. */
+ export const ContactConfigFields = {
+-  contactFormUrl: z.string().pattern(/^https:\/\/[^/\s]+\//).default('https://trtgsjkv6r.feishu.cn/share/base/form/shrcnlCoGElW7MQznGy9r3YYXcg?hide_uid=1&hide_device_info=1&hide_harness_version=1'),
++  // 企业替换：上游默认指向 DeepSeek 的飞书问卷；本发行版改为企业站点（决策人 2026-09-30）。
++  contactFormUrl: z.string().pattern(/^https:\/\/[^/\s]+\//).default('https://example.com/'),
+   contactSource: z.string().default(''),
+   bonusAckRetryDelayMs: z.number().min(1).default(1_000),
+   bonusAckRetryMaxDelayMs: z.number().min(1).default(60_000),
+diff --git a/packages/client/ui-settings-account/tests/contact-url.client.spec.ts b/packages/client/ui-settings-account/tests/contact-url.client.spec.ts
+index 7108f38b..9eec6056 100644
+--- a/packages/client/ui-settings-account/tests/contact-url.client.spec.ts
++++ b/packages/client/ui-settings-account/tests/contact-url.client.spec.ts
+@@ -9,11 +9,9 @@ it('prefills the available support context and hides every context field', () =>
+     uid: 'account-user' as AccountUserId, version: '1.2.3', locale: 'zh-CN',
+     deviceInfo: 'Mozilla/5.0 (Macintosh) Harness/1.2.3', width: 1512, height: 982, pixelRatio: 2,
+   }))
+-  expect(url.origin).toBe('https://trtgsjkv6r.feishu.cn')
+-  expect(url.pathname).toBe('/share/base/form/shrcnlCoGElW7MQznGy9r3YYXcg')
+-  expect(Object.fromEntries(new URL(ContactConfig({}).contactFormUrl).searchParams)).toEqual({
+-    hide_uid: '1', hide_device_info: '1', hide_harness_version: '1',
+-  })
++  expect(url.origin).toBe('https://example.com')
++  expect(url.pathname).toBe('/')
++  expect(Object.fromEntries(new URL(ContactConfig({}).contactFormUrl).searchParams)).toEqual({})
+   expect(Object.fromEntries(url.searchParams)).toEqual({
+     hide_uid: '1', prefill_uid: 'account-user',
+     hide_source: '1', prefill_source: 'app_harness',

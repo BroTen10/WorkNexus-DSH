@@ -1,0 +1,75 @@
+{
+  "simulatedVersion": "dsh-v0.2.0-rc.3",
+  "basedOn": "dsh-v0.2.0-rc.2",
+  "note": "T-027 同步演练用的「模拟上游新版本」。基线已于 2026-09-29 迁移到 dsh-v0.2.0-rc.2（真实新 tag 的 rebase 演练已单独完成，见 docs/证据/T-027_真实rc2同步演练_20260929.txt），而派发卡要求「必须执行一次真实可 rebase 的演练并记录冲突集」，故用本清单在隔离演练场构造下一个模拟上游版本 dsh-v0.2.0-rc.3。每条改动都写明意图与预期冲突，演练脚本逐条断言其生效。",
+  "expectedConflictPaths": [
+    "apps/desktop/src/locale.ts",
+    "README.md",
+    "apps/desktop/resources/icon.png"
+  ],
+  "changes": [
+    {
+      "op": "replace",
+      "path": "apps/desktop/package.json",
+      "find": "\"version\": \"0.2.0-rc.2\"",
+      "replace": "\"version\": \"0.2.0-rc.3\"",
+      "kind": "version",
+      "expectConflict": false,
+      "note": "上游版本推进：我方必须跟随版本号（T-003 版本锁定升级检查清单 U-1）"
+    },
+    {
+      "op": "replace",
+      "path": "apps/desktop/src/locale.ts",
+      "find": "  aboutMenu: 'About DeepSeek Harness',",
+      "replace": "  aboutMenu: 'About DeepSeek Harness Desktop',",
+      "kind": "conflict",
+      "expectConflict": true,
+      "note": "上游改我方差异集命中的同一行文案 → 文本冲突，需按「以官方为基线 + 重放品牌替换」处置"
+    },
+    {
+      "op": "replace",
+      "path": "apps/desktop/src/locale.ts",
+      "find": "  aboutVersion: 'Version V{version}',",
+      "replace": "  aboutVersion: 'Version V{version}',\n  releaseChannel: 'Release channel',",
+      "kind": "addition",
+      "expectConflict": false,
+      "note": "上游新增文案键 → 不冲突，但解析结果必须保留官方新增键"
+    },
+    {
+      "op": "appendText",
+      "path": "README.md",
+      "text": "\n## What's new in 0.2.0-rc.3\n\n- Simulated upstream release notes for the sync rehearsal.\n",
+      "kind": "conflict",
+      "expectConflict": true,
+      "note": "上游在文件尾追加发行说明 → 与我方在文件尾追加的发行版小节竞争同一位置"
+    },
+    {
+      "op": "appendText",
+      "path": "apps/desktop/resources/icon.png",
+      "text": "\n<!-- simulated upstream icon change -->\n",
+      "kind": "conflict",
+      "expectConflict": true,
+      "note": "二进制品牌资产被上游改动（仅追加字节以造成差异，不改 PNG 结构头）→ 二进制冲突，处置为「品牌资产以我方为准」"
+    },
+    {
+      "op": "replace",
+      "path": "apps/desktop/scripts/desktop-auto-update-environment.mjs",
+      "find": "  test: {",
+      "replace": "  staging: {",
+      "kind": "behavior",
+      "expectConflict": false,
+      "deprecatedTokens": ["DSH_DESKTOP_AUTO_UPDATE_ENV=test"],
+      "note": "行为变化：上游把 test 部署更名为 staging（通道口径变化）→ 我方配置模板/文档的引用必须跟随"
+    },
+    {
+      "op": "replace",
+      "path": "apps/desktop/scripts/desktop-auto-update-environment.mjs",
+      "find": "export function desktopUpdateMetadataFilename",
+      "replace": "export function resolveDesktopUpdateMetadataFilename",
+      "kind": "sunset",
+      "expectConflict": false,
+      "deprecatedTokens": ["desktopUpdateMetadataFilename"],
+      "note": "日落项：上游重命名导出函数 → 我方引用该导出的门禁脚本必须同步改名"
+    }
+  ]
+}

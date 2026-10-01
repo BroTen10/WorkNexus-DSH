@@ -1,0 +1,26 @@
+{
+  "id": "worknexus.ipd",
+  "name": "IPD Demo",
+  "version": "0.1.0",
+  "type": "ui",
+  "dshCompatibility": ">=0.2.0-rc.1 <0.3.0",
+  "hostCoreCompatibility": ">=1.0.0",
+  "protected": false,
+  "permissions": [
+    "space.read"
+  ],
+  "uiSlots": [
+    "worknexus.ipd.menu",
+    "worknexus.ipd.process",
+    "worknexus.ipd.project"
+  ],
+  "governance": {
+    "source": "local",
+    "approval": "required"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  }
+}

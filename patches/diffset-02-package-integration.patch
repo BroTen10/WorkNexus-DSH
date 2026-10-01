@@ -1,0 +1,200 @@
+diff --git a/apps/desktop/scripts/electron-builder-config.mjs b/apps/desktop/scripts/electron-builder-config.mjs
+index 1fb78780..7f8044f3 100644
+--- a/apps/desktop/scripts/electron-builder-config.mjs
++++ b/apps/desktop/scripts/electron-builder-config.mjs
+@@ -99,16 +99,16 @@ export function createElectronBuilderConfig(
+   const packaged = resolveDesktopBuildCommit(env)
+   return {
+     appId,
+-    protocols: [{ name: 'DeepSeek Harness', schemes: ['dsh'] }],
++    protocols: [{ name: 'WorkNexus-DSH', schemes: ['dsh'] }],
+     extraMetadata: {
+       dshDesktopAppId: appId,
+       dshMandatoryUpdatePolicy: policy,
+       ...buildVersion === productVersion ? {} : { version: buildVersion },
+       ...packaged === undefined ? {} : { dshBuildCommit: packaged.commit, dshBuildDirty: packaged.dirty },
+     },
+-    productName: 'DeepSeek Harness',
++    productName: 'WorkNexus-DSH',
+     // Unsigned builds carry their own suffix so a shared file can never pass for a release artifact.
+-    artifactName: `deepseek-harness-\${version}-\${os}-\${arch}${unsigned ? '-unsigned' : ''}.\${ext}`,
++    artifactName: `worknexus-dsh-\${version}-\${os}-\${arch}${unsigned ? '-unsigned' : ''}.\${ext}`,
+     directories: { output: unsigned ? buildPaths.unsignedArtifacts : buildPaths.artifacts },
+     asar: true,
+     electronDist: buildPaths.electron,
+@@ -146,6 +146,10 @@ export function createElectronBuilderConfig(
+       { from: fileURLToPath(new URL('../resources/icon-windows.png', import.meta.url)), to: 'icon.png' },
+       // Windows tray bitmaps; macOS keeps the Dock and ships no menu bar icon.
+       ...(packagesWindows ? [{ from: fileURLToPath(new URL('../resources/tray-windows.ico', import.meta.url)), to: 'tray.ico' }] : []),
++      // WorkNexus-DSH 合规文件随包落点（RM-08 / 需求书 §4.1.5 第 9 条 / P1-F16）。
++      // THIRD_PARTY_NOTICES.md 由上游脚本生成，我方不改其字节；发行说明为我方独立文件。
++      { from: fileURLToPath(new URL('../../../THIRD_PARTY_NOTICES.md', import.meta.url)), to: 'THIRD_PARTY_NOTICES.md' },
++      { from: fileURLToPath(new URL('../../../WORKNEXUS-RELEASE-NOTES.md', import.meta.url)), to: 'WORKNEXUS-RELEASE-NOTES.md' },
+     ],
+     mac: {
+       icon: fileURLToPath(new URL('../resources/icon-macos.png', import.meta.url)),
+@@ -155,7 +159,7 @@ export function createElectronBuilderConfig(
+       identity: macOSSigning?.signingIdentity,
+       forceCodeSigning: true,
+       hardenedRuntime: true,
+-      extendInfo: { NSMicrophoneUsageDescription: 'DeepSeek Harness uses your microphone to transcribe speech into message drafts.' },
++      extendInfo: { NSMicrophoneUsageDescription: 'WorkNexus-DSH uses your microphone to transcribe speech into message drafts.' },
+       entitlements: fileURLToPath(new URL('./macos-entitlements.plist', import.meta.url)),
+       entitlementsInherit: fileURLToPath(new URL('./macos-entitlements.plist', import.meta.url)),
+       // ASAR-unpacked native runtime files are pre-signed; PAK resources are sealed by their enclosing bundle.
+diff --git a/apps/desktop/scripts/prepare-package-set.ts b/apps/desktop/scripts/prepare-package-set.ts
+index 7e7d62ee..a000cd67 100644
+--- a/apps/desktop/scripts/prepare-package-set.ts
++++ b/apps/desktop/scripts/prepare-package-set.ts
+@@ -4,6 +4,7 @@ import { createHash } from 'node:crypto'
+ import {
+   constants,
+   copyFileSync,
++  existsSync,
+   globSync,
+   mkdirSync,
+   readFileSync,
+@@ -29,8 +30,31 @@ import { resolveDesktopTargetBuildPaths } from './desktop-build-paths.mjs'
+ 
+ const DSH_PACKAGE = '@deepseek-ai/dsh'
+ const ROOT_PACKAGES = [DSH_PACKAGE, DESKTOP_HOST_PACKAGE] as const
++/**
++ * WorkNexus-DSH 企业层：包集闭包的**额外根**。
++ * 企业包不在上游 pnpm workspace 内，由本仓库 `python scripts/pack_enterprise.py`
++ * 打包后经 `--from`/默认输入目录进入包集；缺目录则闭包自动不含企业层。
++ */
++const WORKNEXUS_ROOT_PACKAGES = [
++  '@worknexus/ent-core',
++  '@worknexus/contracts',
++  '@worknexus/host-core',
++  '@worknexus/plugin-runtime',
++  '@worknexus/kernel-dsh',
++  '@worknexus/ent-entries',
++  '@worknexus/ent-diagnostics',
++  '@worknexus/plugin-enterprise-admin',
++  '@worknexus/plugin-knowledge',
++  '@worknexus/plugin-docgraph',
++  '@worknexus/plugin-ipd',
++  '@worknexus/plugin-acp',
++  '@worknexus/plugin-market',
++] as const
+ const APP_ROOT = resolve(import.meta.dirname, '..')
+ const REPOSITORY_ROOT = resolve(APP_ROOT, '..', '..')
++/** 企业层 tgz 目录（本仓库 `WorkNexus-DSH` 根下的 `.worknexus-packed`）。 */
++const WORKNEXUS_PACKED_DIR = process.env.WORKNEXUS_PACKED_DIR
++  ?? resolve(REPOSITORY_ROOT, '..', '..', '.worknexus-packed')
+ 
+ const REQUIRED_DEPENDENCY_SECTIONS = ['dependencies', 'peerDependencies'] as const
+ const OPTIONAL_DEPENDENCY_SECTION = 'optionalDependencies'
+@@ -58,6 +82,7 @@ function dependencyNames(manifest: Readonly<Record<string, unknown>>, section: s
+  */
+ export function selectDesktopPackageClosure(
+   available: ReadonlyMap<string, PackedDesktopPackage>,
++  extraRoots: readonly string[] = [],
+ ): PackedDesktopPackage[] {
+   const workspace = yaml.load(readFileSync(join(REPOSITORY_ROOT, 'pnpm-workspace.yaml'), 'utf8')) as { packages: string[] }
+   const workspaceNames = new Set(globSync(workspace.packages.map(pattern => `${pattern}/package.json`), { cwd: REPOSITORY_ROOT })
+@@ -84,6 +109,10 @@ export function selectDesktopPackageClosure(
+     if (!available.has(name)) throw new Error(`desktop package set: packed inputs omit ${name}`)
+     visit(name)
+   }
++  // 企业层根：仅在输入目录确实提供该包时纳入，上游-only 调用保持不变。
++  for (const name of extraRoots) {
++    if (available.has(name)) visit(name)
++  }
+   return [...selected.entries()].sort(([left], [right]) => left.localeCompare(right)).map(([, packed]) => packed)
+ }
+ 
+@@ -128,8 +157,10 @@ export function assertDesktopHostPackageFiles(files: readonly string[]): void {
+ }
+ 
+ /** Prepare a package set from release tarball directories. */
+-export function prepareDesktopPackageSet(inputs: readonly string[], output: string): void {
+-  const selected = selectDesktopPackageClosure(packedPackages(inputs))
++export function prepareDesktopPackageSet(
++  inputs: readonly string[], output: string, extraRoots: readonly string[] = WORKNEXUS_ROOT_PACKAGES,
++): void {
++  const selected = selectDesktopPackageClosure(packedPackages(inputs), extraRoots)
+   const host = selected.find(packed => packed.manifest.name === DESKTOP_HOST_PACKAGE)
+   if (host === undefined) throw new Error(`desktop package set: selected closure omits ${DESKTOP_HOST_PACKAGE}`)
+   assertDesktopHostPackageFiles(tarballFiles(host.tarball))
+@@ -164,6 +195,7 @@ function main(): void {
+     buildPaths.packedDsh,
+     buildPaths.packedVendor,
+     buildPaths.packedLandlock,
++    WORKNEXUS_PACKED_DIR,
+   ]
+   const { values } = parseArgs({
+     options: { from: { type: 'string', multiple: true }, out: { type: 'string' } },
+@@ -171,6 +203,12 @@ function main(): void {
+   })
+   const inputs = (values.from ?? defaultInputs).map(path => resolve(REPOSITORY_ROOT, path))
+   const output = values.out === undefined ? buildPaths.packageSet : resolve(REPOSITORY_ROOT, values.out)
++  if (values.from === undefined && !existsSync(WORKNEXUS_PACKED_DIR)) {
++    throw new Error(
++      `desktop package set: 企业层包集目录缺失 ${WORKNEXUS_PACKED_DIR}`
++      + '（先运行 `python scripts/pack_enterprise.py`；如需纯上游包集请显式传 --from）',
++    )
++  }
+   prepareDesktopPackageSet(inputs, output)
+   console.log(`desktop package set: prepared ${output}`)
+ }
+diff --git a/apps/desktop/src/project-manager.ts b/apps/desktop/src/project-manager.ts
+index 270d87d6..f4549d3d 100644
+--- a/apps/desktop/src/project-manager.ts
++++ b/apps/desktop/src/project-manager.ts
+@@ -30,6 +30,20 @@ const PROJECT_NAME = '@deepseek-ai/dsh-desktop-runtime'
+ const DSH_PACKAGE = '@deepseek-ai/dsh'
+ const CORE_BUILD_PACKAGE = '@deepseek-ai/dsh-subprocess-local'
+ const WEB_PROFILE = PROFILE_TEMPLATES.web as ProfileTemplate
++// WorkNexus-DSH 企业层：随发行版预置的企业 bundle。
++// 与官方 bundle 合成为同一份清单（DESKTOP_PROFILE_BUNDLES），因为该清单同时用于
++// profile 初值与原生恢复的 sanitizeProfile：企业 bundle 因此被当作内置项，
++// 原生恢复不会把它们列为「第三方可禁用」（对应 RM-07 / P1-F16）。
++const WORKNEXUS_PROFILE_BUNDLES = [
++  '@worknexus/ent-core',
++  '@worknexus/plugin-enterprise-admin',
++  '@worknexus/plugin-knowledge',
++  '@worknexus/plugin-docgraph',
++  '@worknexus/plugin-ipd',
++  '@worknexus/plugin-acp',
++  '@worknexus/plugin-market',
++] as const
++const DESKTOP_PROFILE_BUNDLES: readonly string[] = [...WEB_PROFILE.bundles, ...WORKNEXUS_PROFILE_BUNDLES]
+ const WORKSPACE_SETTINGS = 'nodeLinker: hoisted\nautoInstallPeers: false\n'
+ function writeJson(path: string, value: unknown): void {
+   writeFileSync(path, `${JSON.stringify(value, undefined, 2)}\n`, { mode: 0o600 })
+@@ -74,7 +88,7 @@ export class DesktopProjectManager {
+    * @returns Backup path after the locked profile write, or undefined if the patch was absent.
+    */
+   async disableAllPlugins(): Promise<string | undefined> {
+-    return this.withLock(() => sanitizeProfile('dsh', this.paths.profile, WEB_PROFILE.bundles))
++    return this.withLock(() => sanitizeProfile('dsh', this.paths.profile, DESKTOP_PROFILE_BUNDLES))
+   }
+ 
+   /**
+@@ -139,7 +153,7 @@ export function createRuntimeProjectMetadata(projectDir: string, release: Deskto
+     private: true,
+     version: '0.0.0',
+     dependencies: desktopCorePackageOverrides(packageSet),
+-    dsh: { profile: { bundles: [...WEB_PROFILE.bundles] } },
++    dsh: { profile: { bundles: [...DESKTOP_PROFILE_BUNDLES] } },
+   }
+   writeJson(join(projectDir, 'package.json'), manifest)
+   writeFileSync(
+@@ -164,7 +178,7 @@ export function createDevelopmentProjectMetadata(projectDir: string, release: De
+       [DSH_PACKAGE]: release.version,
+       [DESKTOP_HOST_PACKAGE]: release.version,
+     },
+-    dsh: { profile: { bundles: [...WEB_PROFILE.bundles] } },
++    dsh: { profile: { bundles: [...DESKTOP_PROFILE_BUNDLES] } },
+   }
+   writeJson(join(projectDir, 'package.json'), manifest)
+   writeFileSync(join(projectDir, 'pnpm-workspace.yaml'), workspaceFile(), { mode: 0o600 })
+@@ -172,5 +186,5 @@ export function createDevelopmentProjectMetadata(projectDir: string, release: De
+ 
+ /** Create the first external plugin profile without running a package manager. */
+ export function createPluginProfile(projectDir: string): void {
+-  initProfile(projectDir, WEB_PROFILE.bundles)
++  initProfile(projectDir, DESKTOP_PROFILE_BUNDLES)
+ }

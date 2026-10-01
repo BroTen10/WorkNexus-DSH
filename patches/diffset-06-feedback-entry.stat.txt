@@ -1,0 +1,5 @@
+ packages/client/ui-settings-account/README.md                     | 2 +-
+ packages/client/ui-settings-account/README.zh.md                  | 2 +-
+ packages/client/ui-settings-account/src/contact-config.ts         | 5 +++--
+ .../client/ui-settings-account/tests/contact-url.client.spec.ts   | 8 +++-----
+ 4 files changed, 8 insertions(+), 9 deletions(-)

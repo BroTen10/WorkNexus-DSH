@@ -1,0 +1,3 @@
+- insert:
+    - id: worknexus-ipd
+      name: '@worknexus/plugin-ipd'

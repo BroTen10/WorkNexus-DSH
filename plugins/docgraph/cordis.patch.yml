@@ -1,0 +1,3 @@
+- insert:
+    - id: worknexus-docgraph
+      name: '@worknexus/plugin-docgraph'

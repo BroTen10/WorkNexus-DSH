@@ -1,0 +1,29 @@
+{
+  "name": "@worknexus/ent-core",
+  "version": "0.1.0",
+  "private": true,
+  "description": "WorkNexus-DSH Host Core 基座 bundle（P1 契约骨架 + 失败隔离最小实现）",
+  "license": "MIT",
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./skeleton": "./skeleton.js",
+    "./model-policy": "./model-policy.js",
+    "./failing": "./failing.js",
+    "./package.json": "./package.json"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "hostInfrastructure": true,
+    "protected": true
+  },
+  "dependencies": {
+    "@worknexus/contracts": "link:../../packages/contracts"
+  },
+  "dshCompatibility": {
+    "dsh": ">=0.2.0-rc.1 <0.3.0"
+  }
+}

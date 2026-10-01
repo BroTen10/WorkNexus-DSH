@@ -1,0 +1,28 @@
+{
+  "id": "worknexus.market",
+  "name": "插件市场与治理",
+  "version": "0.1.0",
+  "type": "composite",
+  "dshCompatibility": ">=0.2.0-rc.1 <0.3.0",
+  "hostCoreCompatibility": ">=1.0.0",
+  "protected": false,
+  "permissions": [
+    "space.read",
+    "plugin.enable",
+    "plugin.disable",
+    "audit.read"
+  ],
+  "uiSlots": [
+    "worknexus.market.browse",
+    "worknexus.market.approvals"
+  ],
+  "governance": {
+    "source": "local",
+    "approval": "required"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  }
+}

@@ -1,0 +1,3 @@
+- insert:
+    - id: worknexus-acp
+      name: '@worknexus/plugin-acp'

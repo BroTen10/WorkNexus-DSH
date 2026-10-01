@@ -1,0 +1,4 @@
+# 差异集补丁是 `git apply` 的逐字节输入：禁止行尾转换，否则新克隆时会因
+# CRLF/LF 不一致导致上下文匹配失败（上游树以 .gitattributes 强制 eol=lf）。
+patches/*.patch -text
+patches/*.stat.txt -text

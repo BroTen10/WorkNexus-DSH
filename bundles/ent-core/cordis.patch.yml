@@ -1,0 +1,24 @@
+# WorkNexus-DSH 企业基座 bundle 的 Cordis patch。
+#
+# 实测约束（T-005 / scripts/probe_bundle_preload.py）：
+#   1. bundle 必须在 package.json 声明 dsh.bundle.patch，否则被 skip；
+#   2. patch 用 `- insert:` 新增行；直接写 `- id: <新 id>` 会报
+#      `patch: entry "<id>" not found`（该写法是「覆盖已存在的行」）。
+#
+# 行说明：
+#   ent-core-skeleton —— Host Core 契约骨架挂载点（T-029 在此填入契约包）
+#   ent-core-model-policy —— 企业模型策略挂载点（T-025：预置默认 + 可下发清单，零副作用）
+#   ent-core-health   —— 企业基座健康探针（供 T-023 门禁与 T-052 失败隔离验证使用）
+#
+# 注意：**不得**删除或重排官方 bundle（@deepseek-ai/dsh-base / dsh-web-app）的行；
+# 本 patch 只做 insert。
+
+- insert:
+    - id: ent-core-skeleton
+      name: '@worknexus/ent-core/skeleton'
+
+    - id: ent-core-model-policy
+      name: '@worknexus/ent-core/model-policy'
+
+    - id: ent-core-health
+      name: '@worknexus/ent-core'

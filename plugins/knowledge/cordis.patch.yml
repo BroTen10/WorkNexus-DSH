@@ -1,0 +1,3 @@
+- insert:
+    - id: worknexus-knowledge
+      name: '@worknexus/plugin-knowledge'

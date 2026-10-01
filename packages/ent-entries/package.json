@@ -1,0 +1,29 @@
+{
+  "name": "@worknexus/ent-entries",
+  "version": "0.1.0",
+  "private": true,
+  "description": "WorkNexus-DSH 企业入口挂载（按运行模式门控；P1 只交付个人模式）",
+  "license": "MIT",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@worknexus/contracts": "link:../../packages/contracts"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.8"
+  }
+}

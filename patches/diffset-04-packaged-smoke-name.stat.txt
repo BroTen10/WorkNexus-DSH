@@ -1,0 +1,5 @@
+ apps/desktop/scripts/desktop-product-name.d.mts  |  2 ++
+ apps/desktop/scripts/desktop-product-name.mjs    |  6 ++++++
+ apps/desktop/scripts/electron-builder-config.mjs | 13 +++++++++----
+ apps/desktop/scripts/smoke-packaged-runtime.ts   |  7 +++++--
+ 4 files changed, 22 insertions(+), 6 deletions(-)

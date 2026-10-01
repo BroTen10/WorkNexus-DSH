@@ -1,0 +1,33 @@
+{
+  "id": "worknexus.enterprise-admin",
+  "name": "企业管理",
+  "version": "0.1.0",
+  "type": "composite",
+  "dshCompatibility": ">=0.2.0-rc.1 <0.3.0",
+  "hostCoreCompatibility": ">=1.0.0",
+  "protected": false,
+  "permissions": [
+    "identity.read",
+    "space.read",
+    "audit.read",
+    "usage.read",
+    "budget.write"
+  ],
+  "uiSlots": [
+    "worknexus.enterprise.organizations",
+    "worknexus.enterprise.members",
+    "worknexus.enterprise.roles",
+    "worknexus.enterprise.spaces",
+    "worknexus.enterprise.audit",
+    "worknexus.enterprise.usage"
+  ],
+  "governance": {
+    "source": "local",
+    "approval": "required"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  }
+}

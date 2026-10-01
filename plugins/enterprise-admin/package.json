@@ -1,0 +1,41 @@
+{
+  "name": "@worknexus/plugin-enterprise-admin",
+  "version": "0.1.0",
+  "private": true,
+  "description": "WorkNexus-DSH 企业管理插件（组织/成员/角色/空间/审计/用量）",
+  "license": "MIT",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "plugin.manifest.json",
+    "cordis.patch.yml"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json && node ../../scripts/copy_src_assets.mjs",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@worknexus/contracts": "link:../../packages/contracts",
+    "@worknexus/host-core": "link:../../packages/host-core",
+    "@worknexus/plugin-runtime": "link:../../packages/plugin-runtime"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.8"
+  }
+}

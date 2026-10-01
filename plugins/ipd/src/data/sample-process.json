@@ -1,0 +1,35 @@
+{
+  "demo": true,
+  "label": "示例数据",
+  "processName": "IPD 样例流程（概念 → 发布）",
+  "stages": [
+    {
+      "id": "concept",
+      "name": "概念阶段",
+      "reviewPoint": "概念决策评审（CDCP）",
+      "deliverables": ["市场需求说明书", "初始业务计划"],
+      "roles": ["产品经理", "市场代表"]
+    },
+    {
+      "id": "plan",
+      "name": "计划阶段",
+      "reviewPoint": "计划决策评审（PDCP）",
+      "deliverables": ["产品需求规格", "项目计划"],
+      "roles": ["产品经理", "研发负责人", "项目经理"]
+    },
+    {
+      "id": "develop",
+      "name": "开发阶段",
+      "reviewPoint": "技术评审（TR）",
+      "deliverables": ["设计文档", "可测试版本"],
+      "roles": ["研发负责人", "测试负责人"]
+    },
+    {
+      "id": "release",
+      "name": "发布阶段",
+      "reviewPoint": "发布决策评审（ADCP）",
+      "deliverables": ["发布说明", "上市计划"],
+      "roles": ["项目经理", "市场代表"]
+    }
+  ]
+}

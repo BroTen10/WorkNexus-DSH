@@ -1,0 +1,98 @@
+diff --git a/apps/desktop/scripts/desktop-product-name.d.mts b/apps/desktop/scripts/desktop-product-name.d.mts
+new file mode 100644
+index 00000000..0865f5da
+--- /dev/null
++++ b/apps/desktop/scripts/desktop-product-name.d.mts
+@@ -0,0 +1,2 @@
++/** WorkNexus-DSH 发行版产品名：安装器、托盘、可执行文件名与打包后冒烟校验的唯一来源。 */
++export const DESKTOP_PRODUCT_NAME: 'WorkNexus-DSH'
+diff --git a/apps/desktop/scripts/desktop-product-name.mjs b/apps/desktop/scripts/desktop-product-name.mjs
+new file mode 100644
+index 00000000..496ad83b
+--- /dev/null
++++ b/apps/desktop/scripts/desktop-product-name.mjs
+@@ -0,0 +1,6 @@
++// WorkNexus-DSH 发行版产品名：安装器、托盘、可执行文件名与打包后冒烟校验的唯一来源。
++//
++// 为什么单独成模块：产品名原先只出现在 electron-builder 配置里，而
++// `smoke-packaged-runtime.ts` 另行写死上游产品名（DeepSeek Harness），
++// 导致品牌差异集落地后打包序列的最后一步以 ENOENT 失败（差异集 04 / T-107）。
++export const DESKTOP_PRODUCT_NAME = 'WorkNexus-DSH'
+diff --git a/apps/desktop/scripts/electron-builder-config.mjs b/apps/desktop/scripts/electron-builder-config.mjs
+index 1fb78780..b116fdb0 100644
+--- a/apps/desktop/scripts/electron-builder-config.mjs
++++ b/apps/desktop/scripts/electron-builder-config.mjs
+@@ -27,6 +27,7 @@ import { desktopTargetBuildPaths, resolveDesktopBuildTarget } from './desktop-bu
+ import { installWindowsDirectoryInstaller } from './windows-directory-installer.mjs'
+ import { preserveWindowsRuntimeSignature, signWindowsCode } from './windows-runtime-signature.mjs'
+ import { prepareWindowsAsarUnpack, verifyWindowsAsarUnpack } from './windows-asar-unpack.mjs'
++import { DESKTOP_PRODUCT_NAME } from './desktop-product-name.mjs'
+ import { recordPackagingEvent } from './packaging-run.mjs'
+ import {
+   resolveMacOSAppUpdateFeed,
+@@ -99,16 +100,16 @@ export function createElectronBuilderConfig(
+   const packaged = resolveDesktopBuildCommit(env)
+   return {
+     appId,
+-    protocols: [{ name: 'DeepSeek Harness', schemes: ['dsh'] }],
++    protocols: [{ name: 'WorkNexus-DSH', schemes: ['dsh'] }],
+     extraMetadata: {
+       dshDesktopAppId: appId,
+       dshMandatoryUpdatePolicy: policy,
+       ...buildVersion === productVersion ? {} : { version: buildVersion },
+       ...packaged === undefined ? {} : { dshBuildCommit: packaged.commit, dshBuildDirty: packaged.dirty },
+     },
+-    productName: 'DeepSeek Harness',
++    productName: DESKTOP_PRODUCT_NAME,
+     // Unsigned builds carry their own suffix so a shared file can never pass for a release artifact.
+-    artifactName: `deepseek-harness-\${version}-\${os}-\${arch}${unsigned ? '-unsigned' : ''}.\${ext}`,
++    artifactName: `worknexus-dsh-\${version}-\${os}-\${arch}${unsigned ? '-unsigned' : ''}.\${ext}`,
+     directories: { output: unsigned ? buildPaths.unsignedArtifacts : buildPaths.artifacts },
+     asar: true,
+     electronDist: buildPaths.electron,
+@@ -146,6 +147,10 @@ export function createElectronBuilderConfig(
+       { from: fileURLToPath(new URL('../resources/icon-windows.png', import.meta.url)), to: 'icon.png' },
+       // Windows tray bitmaps; macOS keeps the Dock and ships no menu bar icon.
+       ...(packagesWindows ? [{ from: fileURLToPath(new URL('../resources/tray-windows.ico', import.meta.url)), to: 'tray.ico' }] : []),
++      // WorkNexus-DSH 合规文件随包落点（RM-08 / 需求书 §4.1.5 第 9 条 / P1-F16）。
++      // THIRD_PARTY_NOTICES.md 由上游脚本生成，我方不改其字节；发行说明为我方独立文件。
++      { from: fileURLToPath(new URL('../../../THIRD_PARTY_NOTICES.md', import.meta.url)), to: 'THIRD_PARTY_NOTICES.md' },
++      { from: fileURLToPath(new URL('../../../WORKNEXUS-RELEASE-NOTES.md', import.meta.url)), to: 'WORKNEXUS-RELEASE-NOTES.md' },
+     ],
+     mac: {
+       icon: fileURLToPath(new URL('../resources/icon-macos.png', import.meta.url)),
+@@ -155,7 +160,7 @@ export function createElectronBuilderConfig(
+       identity: macOSSigning?.signingIdentity,
+       forceCodeSigning: true,
+       hardenedRuntime: true,
+-      extendInfo: { NSMicrophoneUsageDescription: 'DeepSeek Harness uses your microphone to transcribe speech into message drafts.' },
++      extendInfo: { NSMicrophoneUsageDescription: 'WorkNexus-DSH uses your microphone to transcribe speech into message drafts.' },
+       entitlements: fileURLToPath(new URL('./macos-entitlements.plist', import.meta.url)),
+       entitlementsInherit: fileURLToPath(new URL('./macos-entitlements.plist', import.meta.url)),
+       // ASAR-unpacked native runtime files are pre-signed; PAK resources are sealed by their enclosing bundle.
+diff --git a/apps/desktop/scripts/smoke-packaged-runtime.ts b/apps/desktop/scripts/smoke-packaged-runtime.ts
+index 106830b5..41e33b69 100644
+--- a/apps/desktop/scripts/smoke-packaged-runtime.ts
++++ b/apps/desktop/scripts/smoke-packaged-runtime.ts
+@@ -6,6 +6,7 @@ import { readDesktopRuntime, verifyDesktopRuntime } from '../src/runtime-tree.ts
+ import { verifyWindowsCode } from './windows-runtime-signature.mjs'
+ import { smokePreparedRuntime } from './smoke-prepared-runtime.ts'
+ import { resolveDesktopPackageTarget } from './package-target.ts'
++import { DESKTOP_PRODUCT_NAME } from './desktop-product-name.mjs'
+ 
+ const paths = resolveDesktopTargetBuildPaths()
+ const { values } = parseArgs({ options: { unsigned: { type: 'boolean', default: false } }, allowPositionals: false })
+@@ -14,9 +15,11 @@ const windows = target === 'win-x64'
+ if (values.unsigned && !windows) throw new Error('desktop smoke: unsigned artifacts require Windows')
+ const artifacts = values.unsigned ? paths.unsignedArtifacts : paths.artifacts
+ const application = windows ? join(artifacts, 'win-unpacked')
+-  : join(artifacts, target === 'mac-arm64' ? 'mac-arm64' : 'mac', 'DeepSeek Harness.app', 'Contents')
++  : join(artifacts, target === 'mac-arm64' ? 'mac-arm64' : 'mac', `${DESKTOP_PRODUCT_NAME}.app`, 'Contents')
+ const resources = join(application, windows ? 'resources' : 'Resources')
+-const executable = windows ? join(application, 'DeepSeek Harness.exe') : join(application, 'MacOS', 'DeepSeek Harness')
++const executable = windows
++  ? join(application, `${DESKTOP_PRODUCT_NAME}.exe`)
++  : join(application, 'MacOS', DESKTOP_PRODUCT_NAME)
+ const descriptor = await verifyDesktopRuntime(paths.dsh, readDesktopRuntime(paths.dsh).release.version,
+   resolveDesktopPackageTarget(target))
+ if (windows && !values.unsigned) await verifyWindowsCode(application)

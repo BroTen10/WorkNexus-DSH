@@ -1,0 +1,25 @@
+ apps/desktop/src/main.ts                           |   2 +-
+ apps/desktop/tests/expected/about-panel.json       |  16 +--
+ .../client/ui-brand-official/src/client/Brand.tsx  | 135 +++++++++++++++++++--
+ .../client/ui-brand-official/src/client/index.ts   |   2 +-
+ .../tests/browser-plugin.client.spec.tsx           |   2 +-
+ .../ui-settings-account/src/client/locales.ts      |  16 +--
+ .../src/client/locales/onboarding.ts               |  20 +--
+ .../tests/expected/account-signed-out-en.txt       |   2 +-
+ .../tests/expected/account-signed-out-zh.txt       |   2 +-
+ .../tests/expected/onboarding-credit-en.txt        |   2 +-
+ .../tests/expected/onboarding-credit.txt           |   2 +-
+ .../tests/expected/onboarding-process-en.txt       |   2 +-
+ .../tests/expected/onboarding-process.txt          |   2 +-
+ .../tests/expected/onboarding-purpose-en.txt       |   2 +-
+ .../tests/expected/onboarding-purpose.txt          |   2 +-
+ .../tests/expected/onboarding-welcome-en.txt       |   2 +-
+ .../tests/expected/onboarding-welcome.txt          |   2 +-
+ .../tests/expected/platform-error-en.txt           |   2 +-
+ .../tests/expected/platform-error-zh.txt           |   2 +-
+ .../tests/expected/platform-header-en.txt          |   2 +-
+ .../tests/expected/platform-header-zh.txt          |   2 +-
+ .../ui-settings-models/src/client/locales.ts       |   4 +-
+ .../tests/welcome-notice.client.spec.tsx           |   2 +-
+ .../src/client/office/locales.ts                   |   4 +-
+ 24 files changed, 176 insertions(+), 55 deletions(-)

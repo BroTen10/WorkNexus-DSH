@@ -1,0 +1,45 @@
+{
+  "name": "@worknexus/plugin-knowledge",
+  "version": "0.1.0",
+  "private": true,
+  "description": "WorkNexus-DSH 知识库插件（Provider 契约实现、空间绑定、引用与检索日志、管理页面）",
+  "license": "MIT",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "plugin.manifest.json",
+    "cordis.patch.yml"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json && node ../../scripts/copy_src_assets.mjs",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@worknexus/contracts": "link:../../packages/contracts",
+    "@worknexus/host-core": "link:../../packages/host-core",
+    "@worknexus/plugin-runtime": "link:../../packages/plugin-runtime",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@types/react": "~18.3.1",
+    "@types/react-dom": "~18.3.0",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.8"
+  }
+}
