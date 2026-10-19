@@ -1,0 +1,279 @@
+diff --git a/apps/desktop/scripts/electron-builder-config.mjs b/apps/desktop/scripts/electron-builder-config.mjs
+index 4b9cd27a..48276863 100644
+--- a/apps/desktop/scripts/electron-builder-config.mjs
++++ b/apps/desktop/scripts/electron-builder-config.mjs
+@@ -27,6 +27,7 @@ import { desktopArtifactOutput, desktopTargetBuildPaths, resolveDesktopBuildTarg
+ import { installWindowsDirectoryInstaller } from './windows-directory-installer.mjs'
+ import { preserveWindowsRuntimeSignature, signWindowsCode } from './windows-runtime-signature.mjs'
+ import { prepareWindowsAsarUnpack, verifyWindowsAsarUnpack } from './windows-asar-unpack.mjs'
++import { DESKTOP_PRODUCT_NAME } from './desktop-product-name.mjs'
+ import { recordPackagingEvent } from './packaging-run.mjs'
+ import {
+   resolveMacOSAppUpdateFeed,
+@@ -105,7 +106,7 @@ export function createElectronBuilderConfig(
+   const packaged = resolveDesktopBuildCommit(env)
+   return {
+     appId,
+-    protocols: [{ name: 'DeepSeek Harness', schemes: ['dsh'] }],
++    protocols: [{ name: 'WorkNexus-DSH', schemes: ['dsh'] }],
+     extraMetadata: {
+       dshDesktopAppId: appId,
+       dshDesktopUpdateChannel: update?.channel ?? 'nightly',
+@@ -113,9 +114,9 @@ export function createElectronBuilderConfig(
+       ...buildVersion === productVersion ? {} : { version: buildVersion },
+       ...packaged === undefined ? {} : { dshBuildCommit: packaged.commit, dshBuildDirty: packaged.dirty },
+     },
+-    productName: 'DeepSeek Harness',
++    productName: DESKTOP_PRODUCT_NAME,
+     // Unsigned builds carry their own suffix so a shared file can never pass for a release artifact.
+-    artifactName: `deepseek-harness-\${version}-\${os}-\${arch}${output.suffix}.\${ext}`,
++    artifactName: `worknexus-dsh-\${version}-\${os}-\${arch}${output.suffix}.\${ext}`,
+     directories: { output: output.directory },
+     asar: true,
+     electronDist: buildPaths.electron,
+@@ -155,6 +156,12 @@ export function createElectronBuilderConfig(
+       { from: fileURLToPath(new URL('../resources/icon-windows.png', import.meta.url)), to: 'icon.png' },
+       // Windows tray bitmaps; macOS keeps the Dock and ships no menu bar icon.
+       ...(packagesWindows ? [{ from: fileURLToPath(new URL('../resources/tray-windows.ico', import.meta.url)), to: 'tray.ico' }] : []),
++      // WorkNexus-DSH 合规文件随包落点（RM-08 / 需求书 §4.1.5 第 9 条 / P1-F16）。
++      // THIRD_PARTY_NOTICES.md 由上游脚本生成，我方不改其字节；发行说明为我方独立文件。
++      { from: fileURLToPath(new URL('../../../THIRD_PARTY_NOTICES.md', import.meta.url)), to: 'THIRD_PARTY_NOTICES.md' },
++      { from: fileURLToPath(new URL('../../../WORKNEXUS-RELEASE-NOTES.md', import.meta.url)), to: 'WORKNEXUS-RELEASE-NOTES.md' },
++      // 差异集 14：发行版附加第三方组件声明（tgz 分层预置的组件不在上游生成器视野内）。
++      { from: fileURLToPath(new URL('../../../WORKNEXUS-THIRD-PARTY-NOTICES.md', import.meta.url)), to: 'WORKNEXUS-THIRD-PARTY-NOTICES.md' },
+     ],
+     mac: {
+       icon: fileURLToPath(new URL('../resources/icon-macos.png', import.meta.url)),
+@@ -165,7 +172,7 @@ export function createElectronBuilderConfig(
+       identity: unsigned ? '-' : macOSSigning?.signingIdentity,
+       forceCodeSigning: !unsigned,
+       hardenedRuntime: true,
+-      extendInfo: { NSMicrophoneUsageDescription: 'DeepSeek Harness uses your microphone to transcribe speech into message drafts.' },
++      extendInfo: { NSMicrophoneUsageDescription: 'WorkNexus-DSH uses your microphone to transcribe speech into message drafts.' },
+       entitlements: fileURLToPath(new URL('./macos-entitlements.plist', import.meta.url)),
+       entitlementsInherit: fileURLToPath(new URL('./macos-entitlements.plist', import.meta.url)),
+       // Prepared runtime files retain their signatures; PAK resources are sealed by their enclosing bundle.
+diff --git a/apps/desktop/scripts/prepare-package-set.ts b/apps/desktop/scripts/prepare-package-set.ts
+index 7e7d62ee..9007c211 100644
+--- a/apps/desktop/scripts/prepare-package-set.ts
++++ b/apps/desktop/scripts/prepare-package-set.ts
+@@ -4,6 +4,7 @@ import { createHash } from 'node:crypto'
+ import {
+   constants,
+   copyFileSync,
++  existsSync,
+   globSync,
+   mkdirSync,
+   readFileSync,
+@@ -29,8 +30,26 @@ import { resolveDesktopTargetBuildPaths } from './desktop-build-paths.mjs'
+ 
+ const DSH_PACKAGE = '@deepseek-ai/dsh'
+ const ROOT_PACKAGES = [DSH_PACKAGE, DESKTOP_HOST_PACKAGE] as const
++/**
++ * WorkNexus-DSH 个人版：包集闭包的**额外根**。
++ * 个人版只保留插件市场与三个预置插件；它们由 `python scripts/pack_presets.py`
++ * 打包后经 `--from`/默认输入目录进入包集；缺目录则闭包自动不含预置层。
++ */
++const PERSONAL_PRESET_ROOTS = [
++  // D-1：个人版保留插件市场。
++  'dshmarket',
++  // 2026-10-09 决策人指令「随发行版默认启用」的三个市场插件（MIT / MIT / BSD-3-Clause，
++  // 版本与 sha256 见 `configs/vendor/third-party-bundles.lock.json`）。同样必须作为闭包根，
++  // 否则 tgz 会被静默丢弃，而它们是 `dsh.profile.bundles` 的成员。
++  'dsh-better-sidebar',
++  'dsh-claude-style',
++  '@linxin666/dsh-client-ui-skill-explorer',
++] as const
+ const APP_ROOT = resolve(import.meta.dirname, '..')
+ const REPOSITORY_ROOT = resolve(APP_ROOT, '..', '..')
++/** 个人预置 tgz 目录（本仓库 `WorkNexus-DSH` 根下的 `.worknexus-packed`）。 */
++const WORKNEXUS_PACKED_DIR = process.env.WORKNEXUS_PACKED_DIR
++  ?? resolve(REPOSITORY_ROOT, '..', '..', '.worknexus-packed')
+ 
+ const REQUIRED_DEPENDENCY_SECTIONS = ['dependencies', 'peerDependencies'] as const
+ const OPTIONAL_DEPENDENCY_SECTION = 'optionalDependencies'
+@@ -58,6 +77,7 @@ function dependencyNames(manifest: Readonly<Record<string, unknown>>, section: s
+  */
+ export function selectDesktopPackageClosure(
+   available: ReadonlyMap<string, PackedDesktopPackage>,
++  extraRoots: readonly string[] = [],
+ ): PackedDesktopPackage[] {
+   const workspace = yaml.load(readFileSync(join(REPOSITORY_ROOT, 'pnpm-workspace.yaml'), 'utf8')) as { packages: string[] }
+   const workspaceNames = new Set(globSync(workspace.packages.map(pattern => `${pattern}/package.json`), { cwd: REPOSITORY_ROOT })
+@@ -84,6 +104,10 @@ export function selectDesktopPackageClosure(
+     if (!available.has(name)) throw new Error(`desktop package set: packed inputs omit ${name}`)
+     visit(name)
+   }
++  // 个人预置根：仅在输入目录确实提供该包时纳入，上游-only 调用保持不变。
++  for (const name of extraRoots) {
++    if (available.has(name)) visit(name)
++  }
+   return [...selected.entries()].sort(([left], [right]) => left.localeCompare(right)).map(([, packed]) => packed)
+ }
+ 
+@@ -128,8 +152,10 @@ export function assertDesktopHostPackageFiles(files: readonly string[]): void {
+ }
+ 
+ /** Prepare a package set from release tarball directories. */
+-export function prepareDesktopPackageSet(inputs: readonly string[], output: string): void {
+-  const selected = selectDesktopPackageClosure(packedPackages(inputs))
++export function prepareDesktopPackageSet(
++  inputs: readonly string[], output: string, extraRoots: readonly string[] = PERSONAL_PRESET_ROOTS,
++): void {
++  const selected = selectDesktopPackageClosure(packedPackages(inputs), extraRoots)
+   const host = selected.find(packed => packed.manifest.name === DESKTOP_HOST_PACKAGE)
+   if (host === undefined) throw new Error(`desktop package set: selected closure omits ${DESKTOP_HOST_PACKAGE}`)
+   assertDesktopHostPackageFiles(tarballFiles(host.tarball))
+@@ -164,6 +190,7 @@ function main(): void {
+     buildPaths.packedDsh,
+     buildPaths.packedVendor,
+     buildPaths.packedLandlock,
++    WORKNEXUS_PACKED_DIR,
+   ]
+   const { values } = parseArgs({
+     options: { from: { type: 'string', multiple: true }, out: { type: 'string' } },
+@@ -171,6 +198,12 @@ function main(): void {
+   })
+   const inputs = (values.from ?? defaultInputs).map(path => resolve(REPOSITORY_ROOT, path))
+   const output = values.out === undefined ? buildPaths.packageSet : resolve(REPOSITORY_ROOT, values.out)
++  if (values.from === undefined && !existsSync(WORKNEXUS_PACKED_DIR)) {
++    throw new Error(
++      `desktop package set: 个人预置包集目录缺失 ${WORKNEXUS_PACKED_DIR}`
++      + '（先运行 `python scripts/pack_presets.py`；如需纯上游包集请显式传 --from）',
++    )
++  }
+   prepareDesktopPackageSet(inputs, output)
+   console.log(`desktop package set: prepared ${output}`)
+ }
+diff --git a/apps/desktop/src/project-manager.ts b/apps/desktop/src/project-manager.ts
+index 270d87d6..6446d9d5 100644
+--- a/apps/desktop/src/project-manager.ts
++++ b/apps/desktop/src/project-manager.ts
+@@ -25,11 +25,30 @@ import { readDesktopRuntime } from './runtime-tree.ts'
+ import {
+   initProfile, PROFILE_TEMPLATES, removeLinkProjections, sanitizeProfile, type ProfileTemplate,
+ } from '@deepseek-ai/dsh-app-boot'
++import {
++  backfillProfileBundles,
++  backfillProfileMarketPlugin,
++  backfillProfileModelRoute,
++  materializePresetPlugins,
++} from './profile-bundle-backfill.ts'
+ 
+ const PROJECT_NAME = '@deepseek-ai/dsh-desktop-runtime'
+ const DSH_PACKAGE = '@deepseek-ai/dsh'
+ const CORE_BUILD_PACKAGE = '@deepseek-ai/dsh-subprocess-local'
+ const WEB_PROFILE = PROFILE_TEMPLATES.web as ProfileTemplate
++// WorkNexus-DSH 个人版：随发行版预置的市场插件 bundle。
++// 与官方 bundle 合成为同一份清单（DESKTOP_PROFILE_BUNDLES），因为该清单同时用于
++// profile 初值与原生恢复的 sanitizeProfile：预置插件因此被当作内置项，
++// 原生恢复不会把它们列为「第三方可禁用」（对应 RM-07 / P1-F16）。
++const PERSONAL_PROFILE_BUNDLES = [
++  // 2026-10-12 修复：预置市场插件回到官方 bundle 层。三个包也必须留在
++  // bundle 名单里，否则插件市场更新后官方 manager 会追加同名 bundle，
++  // 与旧的固定挂载行形成 duplicate loader entry id。
++  'dsh-better-sidebar',
++  'dsh-claude-style',
++  '@linxin666/dsh-client-ui-skill-explorer',
++] as const
++const DESKTOP_PROFILE_BUNDLES: readonly string[] = [...WEB_PROFILE.bundles, ...PERSONAL_PROFILE_BUNDLES]
+ const WORKSPACE_SETTINGS = 'nodeLinker: hoisted\nautoInstallPeers: false\n'
+ function writeJson(path: string, value: unknown): void {
+   writeFileSync(path, `${JSON.stringify(value, undefined, 2)}\n`, { mode: 0o600 })
+@@ -74,7 +93,7 @@ export class DesktopProjectManager {
+    * @returns Backup path after the locked profile write, or undefined if the patch was absent.
+    */
+   async disableAllPlugins(): Promise<string | undefined> {
+-    return this.withLock(() => sanitizeProfile('dsh', this.paths.profile, WEB_PROFILE.bundles))
++    return this.withLock(() => sanitizeProfile('dsh', this.paths.profile, DESKTOP_PROFILE_BUNDLES))
+   }
+ 
+   /**
+@@ -87,6 +106,49 @@ export class DesktopProjectManager {
+       migrateProfileSettings(this.paths.profile)
+       createPluginProfile(this.paths.profile)
+       removeLinkProjections(this.paths.profile)
++      // 升级机（profile manifest 已存在）清理旧企业 bundle 并补齐预置插件：
++      // 只清 @worknexus/*、只增预置、幂等、失败不阻断启动（差异集 10）。
++      try {
++        backfillProfileBundles(this.paths.profile)
++      } catch (error) {
++        console.warn('desktop project: profile cleanup/backfill failed:', error)
++      }
++      // 发行版默认模型路由（差异集 02/10 扩项，T-125）：新装机与「从未对模型表达过意见」的
++      // 机器补上企业方 hub 路由与默认模型；任一自有行已存在则整体让位、字节不动。
++      // 密钥不在此列 —— profile 只写官方凭据引用名，值由模型设置页面或启动环境提供。
++      try {
++        if (backfillProfileModelRoute(this.paths.profile)) {
++          console.log('desktop project: seeded the default model route')
++        }
++      } catch (error) {
++        console.warn('desktop project: default model route seed failed:', error)
++      }
++      // 个人版插件市场不在 bundle 名单里（T-143 D-1），由 profile 用户层固定行挂载。
++      try {
++        if (backfillProfileMarketPlugin(this.paths.profile)) {
++          console.log('desktop project: seeded the personal plugin market')
++        }
++      } catch (error) {
++        console.warn('desktop project: personal plugin market seed failed:', error)
++      }
++      // 预置市场插件必须物化进 profile `node_modules`：官方 runtime resolution 只把
++      // 「安装闭包」与「profile manifest 直接依赖且在 profile 里真实存在」两类名字暴露给
++      // profile 层，而三个预置包只是被随包塞进运行时树、不在安装闭包里 —— 于是它们自己
++      // patch 的裸包名行 `failed to import`，宿主半边与客户端半包都不存在，插件市场也据此
++      // 判「未安装/未生效」（2026-10-12 真机 + 隔离探针实证，见 profile-bundle-backfill.ts）。
++      try {
++        const materialized = materializePresetPlugins(this.paths.profile, this.runtime.dsh)
++        if (materialized.copied.length > 0) {
++          console.log('desktop project: materialized preset plugins:', materialized.copied.join(', '))
++        }
++        for (const entry of materialized.skipped) {
++          if (entry.reason === '随包源缺失') {
++            console.warn(`desktop project: preset plugin ${entry.name} is not in the runtime tree (${entry.reason})`)
++          }
++        }
++      } catch (error) {
++        console.warn('desktop project: preset plugin materialization failed:', error)
++      }
+     })
+   }
+ 
+@@ -139,7 +201,7 @@ export function createRuntimeProjectMetadata(projectDir: string, release: Deskto
+     private: true,
+     version: '0.0.0',
+     dependencies: desktopCorePackageOverrides(packageSet),
+-    dsh: { profile: { bundles: [...WEB_PROFILE.bundles] } },
++    dsh: { profile: { bundles: [...DESKTOP_PROFILE_BUNDLES] } },
+   }
+   writeJson(join(projectDir, 'package.json'), manifest)
+   writeFileSync(
+@@ -164,13 +226,25 @@ export function createDevelopmentProjectMetadata(projectDir: string, release: De
+       [DSH_PACKAGE]: release.version,
+       [DESKTOP_HOST_PACKAGE]: release.version,
+     },
+-    dsh: { profile: { bundles: [...WEB_PROFILE.bundles] } },
++    dsh: { profile: { bundles: [...DESKTOP_PROFILE_BUNDLES] } },
+   }
+   writeJson(join(projectDir, 'package.json'), manifest)
+   writeFileSync(join(projectDir, 'pnpm-workspace.yaml'), workspaceFile(), { mode: 0o600 })
+ }
+ 
+-/** Create the first external plugin profile without running a package manager. */
++/**
++ * Create the first external plugin profile without running a package manager.
++ *
++ * 2026-10-12（基线迁移 alpha.2）**此处不登记预置插件的 profile 依赖**：
++ * alpha.2 的官方 plugin-manager 会在 profile 目录内执行 `pnpm add … --offline`
++ * （出包冒烟 `runtime:smoke` 走的就是这条路径），profile manifest 里的注册表依赖
++ * 会让它在冷 store 下直接失败：
++ *   ERR_PNPM_NO_OFFLINE_META: Failed to resolve dsh-better-sidebar@0.24.1 in package mirror
++ * （变量对照：去掉依赖 → 通过；只去掉 bundle 名单 → 仍失败；结论：触发项是依赖登记。）
++ * 依赖登记改由启动路径完成 —— `applyRelease()` 内仍调用同一批 `backfillProfileBundles`，
++ * 因此新机在首次启动时照样拿到三条依赖与官方 bundle 层挂载（见 `verify_preset_plugins`
++ * 的 P8a：它断言的是真实 app 启动后的 profile manifest）。
++ */
+ export function createPluginProfile(projectDir: string): void {
+-  initProfile(projectDir, WEB_PROFILE.bundles)
++  initProfile(projectDir, DESKTOP_PROFILE_BUNDLES)
+ }

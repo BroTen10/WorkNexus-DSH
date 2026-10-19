@@ -1,0 +1,14 @@
+ apps/desktop/README.md                             |   2 +-
+ apps/desktop/README.zh.md                          |   2 +-
+ apps/desktop/installer/assets/brand-2x.png         | Bin 40058 -> 61339 bytes
+ apps/desktop/installer/assets/brand-dark-2x.png    | Bin 39867 -> 60499 bytes
+ apps/desktop/installer/assets/brand-dark.png       | Bin 16418 -> 20145 bytes
+ apps/desktop/installer/assets/brand.png            | Bin 16620 -> 20007 bytes
+ .../installer/assets/uninstaller-sidebar.png       | Bin 10064 -> 10811 bytes
+ apps/desktop/installer/strings.nsh                 |  12 +++---
+ .../desktop/renderer/assets/welcome-brand-mark.png | Bin 0 -> 13017 bytes
+ apps/desktop/renderer/assets/welcome-brand.svg     |  44 ---------------------
+ apps/desktop/renderer/welcome.css                  |  22 ++++++++++-
+ apps/desktop/src/client/WelcomePage.tsx            |   8 +++-
+ .../desktop/tests/welcome-renderer.client.spec.tsx |   4 +-
+ 13 files changed, 39 insertions(+), 55 deletions(-)

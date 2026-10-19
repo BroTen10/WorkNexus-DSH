@@ -1,0 +1,8 @@
+ .../expected/plugin-install-cancel/cancelled.expected.md     |  2 +-
+ .../expected/plugin-install-github/another-way.expected.md   |  2 +-
+ .../tests/expected/plugin-install-github/mirror.expected.md  |  2 +-
+ packages/client/ui-plugin-manager/src/client/locales.ts      |  4 ++--
+ scripts/client-build-environment.client.spec.ts              | 12 ++++++------
+ scripts/client-build-environment.ts                          |  2 +-
+ scripts/dev-web.spec.ts                                      |  2 +-
+ 7 files changed, 13 insertions(+), 13 deletions(-)

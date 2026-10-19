@@ -1,0 +1,15 @@
+ apps/web/tests/connection-recovery.e2e.ts                      | 4 ++--
+ apps/web/tests/details-session-lifecycle.e2e.ts                | 4 ++--
+ apps/web/tests/goal-command-presentation.e2e.ts                | 4 ++--
+ apps/web/tests/hmr-live.e2e.ts                                 | 4 ++--
+ apps/web/tests/lifecycle-chrome.e2e.ts                         | 4 ++--
+ apps/web/tests/session-replay-reload.e2e.ts                    | 2 +-
+ apps/web/tests/startup-auto-selection.e2e.ts                   | 4 ++--
+ packages/client/ui-conversation/src/client/locales.ts          | 4 ++--
+ packages/client/ui-conversation/tests/skeleton.client.spec.tsx | 8 ++++----
+ snapshots/web/fresh-round-trip/blank-reload.expected.md        | 2 +-
+ snapshots/web/lifecycle-chrome/hero.expected.md                | 2 +-
+ snapshots/web/lifecycle-chrome/plan-active-zh.expected.md      | 2 +-
+ snapshots/web/lifecycle-chrome/plan-active.expected.md         | 2 +-
+ snapshots/web/voice-input/ui.expected.md                       | 2 +-
+ 14 files changed, 24 insertions(+), 24 deletions(-)

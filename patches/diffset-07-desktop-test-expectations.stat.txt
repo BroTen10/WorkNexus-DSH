@@ -1,0 +1,25 @@
+ apps/desktop/tests/background-notice.spec.ts       |  2 +-
+ .../tests/expected/application-menu-en-US.json     |  4 +--
+ .../tests/expected/application-menu-zh-CN.json     |  4 +--
+ .../tests/expected/fatal-address-in-use-en.txt     |  2 +-
+ .../tests/expected/fatal-address-in-use-zh-CN.txt  |  2 +-
+ apps/desktop/tests/expected/fatal-dialog-en.txt    |  2 +-
+ .../tests/expected/fatal-dialog-with-report-en.txt |  2 +-
+ .../expected/fatal-dialog-with-report-zh-CN.txt    |  2 +-
+ apps/desktop/tests/expected/fatal-dialog-zh-CN.txt |  2 +-
+ .../tests/expected/welcome/en-api-key.expected.txt |  4 +--
+ .../tests/expected/welcome/en-timeout.expected.txt |  4 +--
+ .../tests/expected/welcome/en-waiting.expected.txt |  4 +--
+ .../desktop/tests/expected/welcome/en.expected.txt |  6 ++--
+ .../expected/welcome/zh-CN-api-key.expected.txt    |  4 +--
+ .../expected/welcome/zh-CN-timeout.expected.txt    |  4 +--
+ .../expected/welcome/zh-CN-waiting.expected.txt    |  4 +--
+ .../tests/expected/welcome/zh-CN.expected.txt      |  6 ++--
+ apps/desktop/tests/installer-packaging.spec.ts     |  3 +-
+ apps/desktop/tests/macos-signature.spec.ts         |  9 ++++--
+ apps/desktop/tests/main-startup.spec.ts            |  4 +--
+ apps/desktop/tests/project-manager.spec.ts         | 37 +++++++++++++++++-----
+ apps/desktop/tests/quit-confirmation.spec.ts       |  4 +--
+ apps/desktop/tests/tray.spec.ts                    |  6 ++--
+ .../desktop/tests/windows-update-publisher.spec.ts |  3 +-
+ 24 files changed, 75 insertions(+), 49 deletions(-)

@@ -1,0 +1,13 @@
+ README.md                                        |  12 ++++
+ WORKNEXUS-RELEASE-NOTES.md                       |  85 +++++++++++++++++++++++
+ apps/desktop/package.json                        |   1 +
+ apps/desktop/resources/icon-macos.png            | Bin 279163 -> 92211 bytes
+ apps/desktop/resources/icon-macos.svg            |  69 +++---------------
+ apps/desktop/resources/icon-windows.png          | Bin 128820 -> 41261 bytes
+ apps/desktop/resources/icon-windows.svg          |  69 +++---------------
+ apps/desktop/resources/icon.png                  | Bin 369009 -> 255375 bytes
+ apps/desktop/resources/icon.svg                  |  67 +++---------------
+ apps/desktop/resources/tray-windows.ico          | Bin 15698 -> 17121 bytes
+ apps/desktop/scripts/electron-builder-config.mjs |  15 ++--
+ apps/desktop/src/locale.ts                       |  44 ++++++------
+ 12 files changed, 163 insertions(+), 199 deletions(-)

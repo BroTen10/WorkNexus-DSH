@@ -1,0 +1,542 @@
+diff --git a/apps/desktop/src/profile-bundle-backfill.ts b/apps/desktop/src/profile-bundle-backfill.ts
+new file mode 100644
+index 00000000..420d17d8
+--- /dev/null
++++ b/apps/desktop/src/profile-bundle-backfill.ts
+@@ -0,0 +1,536 @@
++/**
++ * WorkNexus-DSH 个人版：升级机 profile 清理与预置插件补齐（差异集 10）。
++ *
++ * 个人版从企业版拆分后，旧 profile 可能仍列 `@worknexus/*`；这些包不再随个人版分发，
++ * 继续保留会让 loader 在启动时解析失败。本模块在启动时：
++ *   - 从 `dsh.profile.bundles` 移除所有 `@worknexus/*`（保留其它条目与相对顺序）；
++ *   - 补齐三个预置市场插件 bundle 到名单末尾；
++ *   - 补齐三个预置插件的 profile **依赖**登记（官方 plugin-manager 更新依赖该精确版本锚点）；
++ *   - 把三个预置包**物化进 profile 的 `node_modules`**（`materializePresetPlugins`）。
++ *
++ * 规则：
++ *   - **只清企业前缀、只增预置**：不动其它条目，也不重排；
++ *   - **幂等**：名单已干净且预置齐全时不写盘，重复启动结果字节不变；
++ *   - **写盘前备份**：首次写盘前复制 `package.json` 为 `package.json.bak-t143`；
++ *   - **不阻断启动**：写盘失败由调用方告警处理，官方客户端照常启动。
++ *
++ * 写盘复用官方 `writeProfileManifest`（2 空格缩进 + 尾换行），与官方重写保持同一格式；
++ * 不改 `packages/boot/**` 的加载顺序（N-3）。
++ *
++ * **2026-10-12 追加（物化，见 `docs/预置插件物化_T-122.md`）**：三个预置插件只随运行时树
++ * （`app.asar/dsh/node_modules`）发布，既不在安装闭包里、profile 里也没有副本；而官方
++ * runtime resolution 暴露给 profile 层的名字只有「安装闭包」与「profile manifest 直接依赖
++ * 且在 `<profile>/node_modules` 里真实存在」两类（`dsh-app-boot` 的
++ * `collectInstallationScopePackages` / `installedProfilePackageNames`）。它们自己的
++ * `cordis.patch.yml` 用**裸包名**建行，于是宿主半边 `failed to import`、客户端半包也不下发
++ * —— 真机现象是「插件市场显示已安装/启用中，但三个插件都不生效」，同一原因也让市场的
++ * `verifyActivation()`（读 `<profile>/node_modules/<name>/package.json`）判成「未安装」。
++ * 隔离探针实测（同一份安装、只差物化）：物化前 `failed to import` = 3 且首页无三者客户端半包、
++ * 市场判 `missing`；物化后 = 0 且首页含三者客户端半包、市场判 `live`。
++ *
++ * **2026-10-15 追加（发行版默认模型路由，T-125）**：决策人指令「把企业方聚合 hub 变成发行版默认
++ * （新装机也走它）」→ {@link backfillProfileModelRoute} 在 profile 用户层缺失我们两条行时追加
++ * 「hub 路由（`llm-pi-ai` 的 `enterprise-hub`，Anthropic Messages 端点）+ 默认模型
++ * （`agent-default-model`）」；**只追加、不重写既有字节**，任何一条 id 已出现即整体不动
++ * （机器已有自己的选择），因此重复启动结果字节不变。密钥不进 profile：只写官方凭据引用名
++ * `ENTERPRISE_HUB_API_KEY`，值由模型设置页面或启动环境提供（决策人 2026-10-15 选定方案 A）。
++ * @module
++ */
++
++import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs'
++import { join } from 'node:path'
++import { writeProfileManifest, type ProfileManifest } from '@deepseek-ai/dsh-app-boot'
++
++/**
++ * 旧企业版 bundle 前缀。个人版不再分发这些包，启动时从 profile 名单中清理；
++ * 按前缀而不是枚举，兼容企业版后续新增的 bundle 名。
++ */
++const STALE_ENTERPRISE_BUNDLE_PREFIX = '@worknexus/'
++
++/**
++ * 随发行版默认启用的市场插件 bundle。2026-10-12 起它们也进入官方 bundle 名单：
++ * 升级机旧名单缺失时按同序追加。不要再用固定挂载行建同 id 行，否则市场更新时会
++ * 触发 duplicate loader entry id 并自动回滚。
++ *
++ * 注意（2026-10-12 修正）：三个预置包不在安装闭包内，官方 runtime resolution 只暴露
++ * 「安装闭包」与「profile manifest 直接依赖且在 `<profile>/node_modules` 里真实存在」两类
++ * 名字；真正让裸包名可解析的是 {@link materializePresetPlugins} 的 profile 物化。
++ */
++export const WORKNEXUS_PRESET_BUNDLES: readonly string[] = [
++  'dsh-better-sidebar',
++  'dsh-claude-style',
++  '@linxin666/dsh-client-ui-skill-explorer',
++]
++
++/**
++ * 随发行版默认启用的第三方市场插件（决策人 2026-10-09 指令）。
++ *
++ * 登记为 `dependencies` 的作用是让**插件市场**把这几个包视为「已安装」：
++ * `dshmarket/lib/profile.js` 的 `readInstalled()` 直接读 profile manifest 的 `dependencies`
++ * （`dshmarket` v1.66.9 实测），因此 Discover 页不会再提供「安装」，也就不会出现
++ * 「再装一次 → 与随包行重复挂载」的风险。
++ */
++export const WORKNEXUS_PRESET_PLUGINS: Readonly<Record<string, string>> = {
++  'dsh-better-sidebar': '0.25.0',
++  'dsh-claude-style': '0.13.2',
++  '@linxin666/dsh-client-ui-skill-explorer': '0.4.6',
++}
++
++/**
++ * 个人版保留的第三方插件市场。
++ *
++ * 按 T-143 D-1 不把它写进 `dsh.profile.bundles`；改用 profile 用户层的固定行挂载，
++ * 与原先企业版 `plugin-market` 的加载形态一致，但不再依赖企业包。
++ */
++export const WORKNEXUS_MARKET_PLUGIN = 'dshmarket'
++
++/** 个人版市场在 profile 用户层占用的行 id。 */
++export const WORKNEXUS_MARKET_ENTRY_ID = 'dsh-market'
++
++const MARKET_PLUGIN_PRESET_BLOCK = [
++  '# ── WorkNexus-DSH 个人版插件市场（T-143）────────────────────────────────',
++  '- insert:',
++  '    - id: ' + WORKNEXUS_MARKET_ENTRY_ID,
++  "      name: '" + WORKNEXUS_MARKET_PLUGIN + "'",
++  '',
++].join('\n')
++
++/**
++ * 发行版默认模型路由预置（T-125）在 profile 用户层里占用的两条行 id。
++ * 任一条已出现即视为「这台机器对模型有自己的意见」，补齐整体让位。
++ */
++export const WORKNEXUS_DEFAULT_MODEL_ENTRY_IDS: readonly string[] = ['llm-pi-ai', 'agent-default-model']
++
++/** 随发行版默认的模型路由名（`llm-pi-ai` 的 providers 键，也是模型选择器里的 route id）。 */
++export const WORKNEXUS_DEFAULT_MODEL_ROUTE = 'enterprise-hub'
++
++/** 随发行版默认的模型 id（hub 侧模型名）。 */
++export const WORKNEXUS_DEFAULT_MODEL_ID = 'deepseek-v4.1-flash'
++
++/** 模型路由的端点基址（hub 的 Anthropic Messages 端点；适配器自行拼 `/v1/messages`）。 */
++export const WORKNEXUS_DEFAULT_MODEL_BASE_URL = 'https://hub.example.com'
++
++/** 默认模型路由使用的官方凭据引用名（**只写引用名，值永不落进任何仓库或 profile 文件**）。 */
++export const WORKNEXUS_DEFAULT_MODEL_API_KEY_REF = 'ENTERPRISE_HUB_API_KEY'
++
++/**
++ * 追加进 profile 用户层的默认模型路由块。**只追加**：既有字节一个不改，
++ * 注释块同时充当「不想要这个默认怎么办」的现场说明。
++ */
++const MODEL_ROUTE_PRESET_BLOCK = [
++  '# ── WorkNexus-DSH 发行版默认模型路由（差异集 02/10 扩项，2026-10-15）────────────',
++  '# 默认会话模型 = 企业方聚合 hub 的 deepseek-v4.1-flash（Anthropic Messages 端点）。',
++  `# 密钥不进本文件：只引用官方凭据 ${WORKNEXUS_DEFAULT_MODEL_API_KEY_REF}`,
++  '# （模型设置页面填写，或导出同名环境变量），本文件与仓库内永远不含密钥值。',
++  '# 不采用该默认：改成自己的选择或删掉下面两条行即可，启动补齐不会再写回；',
++  '# 官方 llm-deepseek（deepseek-official）与 DeepSeek 账户路由仍然保留，可在模型选择器里切回。',
++  '- id: llm-pi-ai',
++  "  name: '@deepseek-ai/dsh-llm-pi-ai'",
++  '  config:',
++  '    providers:',
++  `      ${WORKNEXUS_DEFAULT_MODEL_ROUTE}:`,
++  '        displayName: 企业方 Hub',
++  `        apiKeyEnv: ${WORKNEXUS_DEFAULT_MODEL_API_KEY_REF}`,
++  '        api: anthropic-messages',
++  `        baseURL: ${WORKNEXUS_DEFAULT_MODEL_BASE_URL}`,
++  '        models:',
++  `          - id: ${WORKNEXUS_DEFAULT_MODEL_ID}`,
++  '            name: DeepSeek-V4.1-Flash',
++  '            contextWindow: 1000000',
++  '- id: agent-default-model',
++  "  name: '@deepseek-ai/dsh-agent-default-model'",
++  '  config:',
++  `    provider: ${WORKNEXUS_DEFAULT_MODEL_ROUTE}`,
++  `    model: ${WORKNEXUS_DEFAULT_MODEL_ID}`,
++  '',
++].join('\n')
++
++/** 用户层里是否已出现我们占用的两条行 id 之一（行首 `- id: <id>`，引号可选）。 */
++function declaresModelOpinion(text: string): boolean {
++  return WORKNEXUS_DEFAULT_MODEL_ENTRY_IDS.some(id =>
++    new RegExp(`^\\s*-\\s*id:\\s*['"]?${id}['"]?\\s*$`, 'mu').test(text))
++}
++
++/**
++ * 计算补齐后的 profile 用户层文本：**只追加**默认模型路由块，既有内容逐字节保留。
++ * 让位与拒绝写盘的每一种情形都返回 undefined：
++ *   · 两条行之一已出现（机器对模型已有自己的意见）；
++ *   · 根不是块序列（映射根、损坏文本等任何我们没把握的形态）。
++ * @param text - 当前 `cordis.patch.yml` 全文。
++ * @returns 追加后的全文；不需要或不应写盘时返回 undefined。
++ */
++export function seededModelRoutePatch(text: string): string | undefined {
++  if (declaresModelOpinion(text)) return undefined
++  const trimmed = text.trimEnd()
++  if (trimmed.endsWith('[]')) {
++    // 官方模板的空列表：把它换成块序列，而不是在 `[]` 之后再写一个根节点。
++    const head = trimmed.slice(0, -2)
++    return `${head}${head.length === 0 || head.endsWith('\n') ? '' : '\n'}${MODEL_ROUTE_PRESET_BLOCK}`
++  }
++  const first = trimmed.split('\n').find(line => line.trim() !== '' && !line.startsWith('#'))
++  if (first === undefined) {
++    return trimmed.length === 0 ? MODEL_ROUTE_PRESET_BLOCK : `${trimmed}\n${MODEL_ROUTE_PRESET_BLOCK}`
++  }
++  if (!/^-(?:\s|$)/u.test(first)) return undefined
++  return `${trimmed}\n\n${MODEL_ROUTE_PRESET_BLOCK}`
++}
++
++/**
++ * 把一个已存在的 profile 用户层补上发行版默认模型路由。
++ * 用户层缺失（profile 尚未初始化）时**不写盘也不抛错**：下一次启动再补，
++ * 因此本函数只可能在真正写盘失败时抛出，调用方决定是否阻断启动。
++ * @param profileDir - 桌面托管 profile 目录。
++ * @returns true 表示本次写盘；false 表示无需写盘或没有可写的用户层。
++ */
++export function backfillProfileModelRoute(profileDir: string): boolean {
++  const path = join(profileDir, 'cordis.patch.yml')
++  let text: string
++  try {
++    text = readFileSync(path, 'utf8')
++  } catch {
++    return false
++  }
++  const seeded = seededModelRoutePatch(text)
++  if (seeded === undefined) return false
++  writeFileSync(path, seeded)
++  return true
++}
++
++/** 用户层是否已经挂载个人版市场（按行 id 或包名判断）。 */
++function declaresMarketPlugin(text: string): boolean {
++  return new RegExp(
++    '-\\s*insert:[\\s\\S]{0,1000}?' +
++    `\\s+-\\s*id:\\s*['"]?${WORKNEXUS_MARKET_ENTRY_ID}['"]?\\s*\\n` +
++    `\\s+name:\\s*['"]?${WORKNEXUS_MARKET_PLUGIN}['"]?\\s*$`,
++    'mu',
++  ).test(text)
++}
++
++/**
++ * 计算补齐后的 profile 用户层文本：只追加个人版市场挂载行，既有内容逐字节保留。
++ * 根不是块序列时拒绝写盘，避免破坏用户自定义配置。
++ * @param text - 当前 `cordis.patch.yml` 全文。
++ * @returns 追加后的全文；不需要或不应写盘时返回 undefined。
++ */
++export function seededMarketPluginPatch(text: string): string | undefined {
++  if (declaresMarketPlugin(text)) return undefined
++  const trimmed = text.trimEnd()
++  if (trimmed.endsWith('[]')) {
++    const head = trimmed.slice(0, -2)
++    return `${head}${head.length === 0 || head.endsWith('\n') ? '' : '\n'}${MARKET_PLUGIN_PRESET_BLOCK}`
++  }
++  const first = trimmed.split('\n').find(line => line.trim() !== '' && !line.startsWith('#'))
++  if (first === undefined) {
++    return trimmed.length === 0 ? MARKET_PLUGIN_PRESET_BLOCK : `${trimmed}\n${MARKET_PLUGIN_PRESET_BLOCK}`
++  }
++  if (!/^-(?:\s|$)/u.test(first)) return undefined
++  return `${trimmed}\n\n${MARKET_PLUGIN_PRESET_BLOCK}`
++}
++
++/**
++ * 把一个已存在的 profile 用户层补上个人版市场挂载行。
++ * 用户层缺失时下一次启动再补；写盘失败由调用方告警，不阻断启动。
++ * @param profileDir - 桌面托管 profile 目录。
++ * @returns true 表示本次写盘；false 表示无需写盘或没有可写的用户层。
++ */
++export function backfillProfileMarketPlugin(profileDir: string): boolean {
++  const path = join(profileDir, 'cordis.patch.yml')
++  let text: string
++  try {
++    text = readFileSync(path, 'utf8')
++  } catch {
++    return false
++  }
++  const seeded = seededMarketPluginPatch(text)
++  if (seeded === undefined) return false
++  writeFileSync(path, seeded)
++  return true
++}
++
++/**
++ * 计算清理并补齐后的 bundle 名单：移除 `@worknexus/*`，再把缺失的预置插件追加到末尾。
++ * @param bundles - 当前 `dsh.profile.bundles`（可能是 undefined：manifest 未声明该字段）。
++ * @returns 清理/补齐后的新名单；已干净且齐全、或没有名单时返回 undefined（表示无需写盘）。
++ */
++export function backfilledBundles(bundles: readonly string[] | undefined): string[] | undefined {
++  if (bundles === undefined) return undefined
++  // 逐项拷贝而不是展开：`readonly string[]` 经 Array.isArray 收窄会退化成 any[]，
++  // 上游 oxlint 的 no-unsafe-spread 会因此报错。
++  const current: string[] = []
++  for (const name of bundles) current.push(name)
++  const cleaned = current.filter(name => !name.startsWith(STALE_ENTERPRISE_BUNDLE_PREFIX))
++  const missing = WORKNEXUS_PRESET_BUNDLES.filter(name => !cleaned.includes(name))
++  if (cleaned.length === current.length && missing.length === 0) return undefined
++  return [...cleaned, ...missing]
++}
++
++/**
++ * 比较两个 `x.y.z` 精确版本；任一方不是该形态时返回 undefined。
++ *
++ * 预置插件的随包版本都是稳定版三元组，这里不引入 semver 依赖，也不猜测
++ * 预发布标签的顺序 —— 非三元组一律按「用户/市场自己的写法」保留。
++ */
++function compareExactVersions(left: string, right: string): number | undefined {
++  const pattern = /^(\d+)\.(\d+)\.(\d+)$/u
++  const one = pattern.exec(left)
++  const other = pattern.exec(right)
++  if (one === null || other === null) return undefined
++  for (let index = 1; index <= 3; index += 1) {
++    const difference = Number(one[index]) - Number(other[index])
++    if (difference !== 0) return difference
++  }
++  return 0
++}
++
++/**
++ * 计算补齐后的 profile 依赖：追加缺失的预置第三方插件。
++ * 规则：**只向前同步我们自持的精确版本锚点** ——
++ *   · 缺失 → 按随发行版钉死的版本补上；
++ *   · 已存在且是精确版本（`x.y.z`）但**低于**随包版本 → 同步为随包版本（2026-10-12 起：
++ *     插件随发行版升级时，profile 里的版本锚点必须跟着走，否则插件市场会拿旧版本号与 npm 最新版比对，
++ *     对已经是最新版的预置插件提示「可更新」）；
++ *   · 精确版本**等于或高于**随包版本 → 原样保留（2026-10-18 起：市场装上的新版本不能被随包版本
++ *     悄悄回退；回退只改 manifest 与 node_modules、不改 pnpm-lock.yaml，会让下一次更新失去可信的
++ *     回滚基线，正是「更新失败且无法证明精确来源」的直接来源）；
++ *   · 其它写法（`^`/`~`/`link:`/`file:` 等用户或市场写入的 spec）原样保留，不覆盖。
++ * @param dependencies - 当前 manifest 的 `dependencies`。
++ * @returns 变更后的依赖表；无变更或依赖字段缺失时返回 undefined（表示无需写盘）。
++ */
++export function backfilledPresetDependencies(
++  dependencies: Readonly<Record<string, string>> | undefined,
++): Record<string, string> | undefined {
++  if (dependencies === undefined) return undefined
++  const current: Record<string, string> = { ...dependencies }
++  let changed = false
++  for (const [name, spec] of Object.entries(WORKNEXUS_PRESET_PLUGINS)) {
++    const existing = current[name]
++    // 缺失 → 补；精确版本且**落后**于随包版本 → 前进；等于/高于随包版本 → 保留。
++    const order = existing === undefined ? -1 : compareExactVersions(existing, spec)
++    if (order !== undefined && order < 0) {
++      current[name] = spec
++      changed = true
++    }
++  }
++  return changed ? current : undefined
++}
++
++/**
++ * 清理一个已存在的 profile manifest：移除 `@worknexus/*`，补齐预置插件 bundle 与依赖。
++ * manifest 缺失、JSON 损坏或结构不符时**不写盘也不抛错**（由官方加载链路报错），
++ * 因此本函数只可能在真正写盘失败时抛出，调用方决定是否阻断启动。
++ * 首次写盘前把 `package.json` 复制为 `package.json.bak-t143`。
++ * @param profileDir - 桌面托管 profile 目录。
++ * @returns true 表示本次写盘；false 表示无需写盘或没有可写的 manifest。
++ */
++export function backfillProfileBundles(profileDir: string): boolean {
++  const manifestPath = join(profileDir, 'package.json')
++  let parsed: unknown
++  try {
++    parsed = JSON.parse(readFileSync(manifestPath, 'utf8'))
++  } catch {
++    // manifest 缺失或损坏：由官方加载链路报错，这里不写盘也不抢先判定。
++    return false
++  }
++  if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) return false
++  const manifest = parsed as ProfileManifest
++  const declared: unknown = manifest.dsh?.profile?.bundles
++  if (!Array.isArray(declared)) return false
++  const current: string[] = []
++  for (const name of declared as readonly unknown[]) {
++    if (typeof name !== 'string') return false
++    current.push(name)
++  }
++  const bundles = backfilledBundles(current)
++  const dependencies = backfilledPresetDependencies(manifest.dependencies)
++  if (bundles === undefined && dependencies === undefined) return false
++  const backupPath = `${manifestPath}.bak-t143`
++  if (!existsSync(backupPath)) copyFileSync(manifestPath, backupPath)
++  writeProfileManifest(profileDir, {
++    ...manifest,
++    ...(dependencies === undefined ? {} : { dependencies }),
++    dsh: {
++      ...manifest.dsh,
++      profile: { ...manifest.dsh?.profile, ...(bundles === undefined ? {} : { bundles }) },
++    },
++  })
++  return true
++}
++
++/** 一个预置插件包在 profile 内的物化结果。 */
++export interface PresetPluginMaterialization {
++  /** 本次真正写入 `<profile>/node_modules` 的包名。 */
++  readonly copied: readonly string[]
++  /** 本次未物化的包名及其理由（用于运行日志与门禁）。 */
++  readonly skipped: readonly { readonly name: string; readonly reason: string }[]
++}
++
++/** 递归复制一个包目录；源在 asar 内时逐个文件读、逐个文件写（Electron 主进程可读 asar）。 */
++function copyPackageTree(source: string, target: string): void {
++  mkdirSync(target, { recursive: true })
++  for (const entry of readdirSync(source, { withFileTypes: true })) {
++    const from = join(source, entry.name)
++    const to = join(target, entry.name)
++    if (entry.isDirectory()) {
++      copyPackageTree(from, to)
++      continue
++    }
++    writeFileSync(to, readFileSync(from), { mode: statSync(from).mode & 0o777 })
++  }
++}
++
++interface RuntimePackageManifest {
++  readonly name?: unknown
++  readonly version?: unknown
++  readonly dependencies?: Readonly<Record<string, string>>
++  readonly optionalDependencies?: Readonly<Record<string, string>>
++}
++
++function readRuntimePackageManifest(runtimeDir: string, name: string): RuntimePackageManifest | undefined {
++  try {
++    return JSON.parse(readFileSync(join(runtimeDir, 'node_modules', name, 'package.json'), 'utf8')) as RuntimePackageManifest
++  } catch {
++    return undefined
++  }
++}
++
++function packageDependencies(manifest: RuntimePackageManifest): string[] {
++  return [
++    ...Object.keys(manifest.dependencies ?? {}),
++    ...Object.keys(manifest.optionalDependencies ?? {}),
++  ]
++}
++
++function packageManifestName(directory: string): string | undefined {
++  try {
++    const manifest = JSON.parse(readFileSync(join(directory, 'package.json'), 'utf8')) as { name?: unknown }
++    return typeof manifest.name === 'string' ? manifest.name : undefined
++  } catch {
++    return undefined
++  }
++}
++
++function materializePackage(
++  profileDir: string,
++  runtimeDir: string,
++  name: string,
++  copied: string[],
++  skipped: { name: string; reason: string }[],
++): boolean {
++  const source = join(runtimeDir, 'node_modules', name)
++  if (packageManifestName(source) !== name) {
++    skipped.push({ name, reason: '随包源缺失' })
++    return false
++  }
++  const target = join(profileDir, 'node_modules', name)
++  const targetName = packageManifestName(target)
++  if (targetName === name) return true
++  if (targetName !== undefined) {
++    skipped.push({ name, reason: '目标目录不是该包' })
++    return false
++  }
++  if (existsSync(target)) {
++    // 旧版本可能留下不完整的依赖目录（有文件但无 package.json）。这不是有效的本地安装，
++    // 用随包闭包修复；完整且带 manifest 的本地包仍由用户/市场优先。
++    rmSync(target, { recursive: true, force: true })
++  }
++  mkdirSync(join(profileDir, 'node_modules'), { recursive: true })
++  copyPackageTree(source, target)
++  copied.push(name)
++  return true
++}
++
++function materializeDependencyClosure(
++  profileDir: string,
++  runtimeDir: string,
++  roots: readonly string[],
++  copied: string[],
++  skipped: { name: string; reason: string }[],
++): void {
++  const pending = [...roots]
++  const visited = new Set<string>()
++  while (pending.length > 0) {
++    const name = pending.shift()
++    if (name === undefined || visited.has(name)) continue
++    visited.add(name)
++    const manifest = readRuntimePackageManifest(runtimeDir, name)
++    if (manifest === undefined) continue
++    for (const dependency of packageDependencies(manifest)) {
++      if (dependency.startsWith('@deepseek-ai/')) continue
++      if (materializePackage(profileDir, runtimeDir, dependency, copied, skipped)) {
++        pending.push(dependency)
++      }
++    }
++  }
++}
++
++/**
++ * 把随发行版预置的三个市场插件物化到 `<profile>/node_modules`，形态与「市场正常安装」
++ * 完全一致（真实文件、真实 `package.json`）。
++ *
++ * 规则（幂等、可重复启动、不动市场装过的东西）：
++ *   · **只在我方锚点上动作**：profile manifest 里该名字缺失、或恰好等于随包精确版本时，
++ *     我们才写入/同步；市场（或用户）写过的其它 spec（`^`/`~`/`file:`/更新的精确版本）
++ *     一律不动 —— 本地副本优先，市场装过的版本不能被随包版本覆盖；
++ *   · 本地副本已是随包版本 → 不复制（第二次启动零写入）；
++ *   · 随包源不存在（例如开发树没打包这三个包）→ 记为跳过并告警，**不抛错**；
++ *   · 覆盖前核对目标目录里 `package.json` 的 `name`，不是该包就跳过，绝不误删别的目录。
++ *
++ * @param profileDir - 桌面托管 profile 目录。
++ * @param runtimeDir - 安装态运行时目录（`resources/app.asar/dsh`），随包插件在其 `node_modules` 下。
++ * @returns 本次复制与跳过的清单。
++ */
++export function materializePresetPlugins(profileDir: string, runtimeDir: string): PresetPluginMaterialization {
++  const copied: string[] = []
++  const skipped: { name: string; reason: string }[] = []
++  const materializedRoots: string[] = []
++  let declared: Record<string, unknown> = {}
++  try {
++    const manifest = JSON.parse(readFileSync(join(profileDir, 'package.json'), 'utf8')) as {
++      dependencies?: Record<string, unknown>
++    }
++    declared = manifest.dependencies ?? {}
++  } catch {
++    // manifest 缺失或损坏：依赖归属判不了，交由缺口清单跳过（官方加载链路会报错）。
++  }
++  for (const [name, version] of Object.entries(WORKNEXUS_PRESET_PLUGINS)) {
++    const spec = declared[name]
++    if (typeof spec === 'string' && spec !== version) {
++      skipped.push({ name, reason: `依赖 spec 非我方锚点（${spec}）` })
++      continue
++    }
++    const source = join(runtimeDir, 'node_modules', name)
++    if (!existsSync(join(source, 'package.json'))) {
++      skipped.push({ name, reason: '随包源缺失' })
++      continue
++    }
++    const target = join(profileDir, 'node_modules', name)
++    const localManifest = join(target, 'package.json')
++    if (existsSync(localManifest)) {
++      try {
++        const local = JSON.parse(readFileSync(localManifest, 'utf8')) as { name?: unknown; version?: unknown }
++        if (local.name !== name) {
++          skipped.push({ name, reason: '目标目录不是该包' })
++          continue
++        }
++        if (local.version === version) {
++          skipped.push({ name, reason: '已是随包版本' })
++          materializedRoots.push(name)
++          continue
++        }
++      } catch {
++        skipped.push({ name, reason: '本地 package.json 不可读' })
++        continue
++      }
++      rmSync(target, { recursive: true, force: true })
++    }
++    mkdirSync(join(profileDir, 'node_modules'), { recursive: true })
++    copyPackageTree(source, target)
++    copied.push(name)
++    materializedRoots.push(name)
++  }
++  if (materializePackage(profileDir, runtimeDir, WORKNEXUS_MARKET_PLUGIN, copied, skipped)) {
++    materializedRoots.push(WORKNEXUS_MARKET_PLUGIN)
++  }
++  materializeDependencyClosure(profileDir, runtimeDir, materializedRoots, copied, skipped)
++  return { copied, skipped }
++}

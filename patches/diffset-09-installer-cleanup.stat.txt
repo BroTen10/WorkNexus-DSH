@@ -1,0 +1,4 @@
+ apps/desktop/installer/uninstall.nsh           | 46 ++++++++++++++++++++++++--
+ apps/desktop/scripts/installer-directories.nsh |  2 ++
+ apps/desktop/scripts/installer.nsh             | 30 +++++++++++++++++
+ 3 files changed, 75 insertions(+), 3 deletions(-)
