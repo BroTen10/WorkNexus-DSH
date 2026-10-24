@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 """按锁文件取回随发行版预置的第三方 DSH bundle（含运行依赖闭包）。
 
-覆盖两批预置：T-120 的插件市场 `dshmarket`（+ `undici`），以及 2026-10-09 决策人指定的
+覆盖两批预置：T-120 的插件市场 `dshmarket`（+ `undici`），以及决策人指定的
 **随发行版默认启用的市场插件**（`dsh-better-sidebar` / `dsh-claude-style` /
-`@linxin666/dsh-client-ui-skill-explorer`）。三个插件的客户端半边**自带打包**（mermaid 7 MB、
+`@tt-a1i/archify-dsh` / `@linxin666/dsh-client-ui-skill-explorer`）。四个插件的客户端半边**自带打包**（mermaid 7 MB、
 CodeMirror 2 MB 等依赖已内联进 `lib/client*.js`），宿主半边只引用桌面运行时已随包的模块，
 因此本体随包即可，无需额外的运行依赖（证据见 `docs/插件预置_差异集02-10.md`）。
 
@@ -37,7 +37,7 @@ dshmarket 及其运行依赖一并钉死版本与 sha256 后放进包集目录�
   python scripts/fetch_third_party_bundles.py                     # 取到 .worknexus-packed/
   python scripts/fetch_third_party_bundles.py --out .worknexus-packed
   python scripts/fetch_third_party_bundles.py --verify-only       # 只校验不下载
-  python scripts/fetch_third_party_bundles.py --add dsh-better-sidebar@0.25.0
+  python scripts/fetch_third_party_bundles.py --add dsh-better-sidebar@0.28.0
 
 退出码：全部就绪为 0；任一缺失/不匹配为 1。
 """

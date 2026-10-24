@@ -1,16 +1,16 @@
 {
-  "$comment": "随发行版预置的第三方 DSH bundle 及其运行依赖闭包（版本钉死 + sha256）。两批来源：① T-120 的插件市场 dshmarket（企业侧只消费其「插件市场」能力，治理语义仍由 @worknexus/plugin-market 自持）；② 2026-10-09 决策人指令「随发行版默认启用」的三个市场插件 dsh-better-sidebar / dsh-claude-style / @linxin666/dsh-client-ui-skill-explorer（三者客户端半边自带打包、宿主半边只用运行时已随包的模块，因此无需额外运行依赖）。登记入口：python scripts/fetch_third_party_bundles.py --add <name>@<version>。",
+  "$comment": "随发行版预置的第三方 DSH bundle 及其运行依赖闭包（版本钉死 + sha256）。两批来源：① T-120 的插件市场 dshmarket（企业侧只消费其「插件市场」能力，治理语义仍由 @worknexus/plugin-market 自持）；② 决策人指令「随发行版默认启用」的四个市场插件 dsh-better-sidebar / dsh-claude-style / @tt-a1i/archify-dsh / @linxin666/dsh-client-ui-skill-explorer（四者客户端半边自带打包、宿主半边只用运行时已随包的模块，因此无需额外运行依赖）。登记入口：python scripts/fetch_third_party_bundles.py --add <name>@<version>。",
   "schemaVersion": 1,
-  "fetchedAt": "2026-10-19",
+  "fetchedAt": "2026-10-21",
   "registry": "https://registry.npmjs.org",
   "runtimeProvided": {
-    "$comment": "以下包桌面运行时已自带且满足各预置包的声明范围，**不随包重复提供**（避免用 overrides 覆盖上游版本）。实测（%LOCALAPPDATA%\\Programs\\WorkNexus-DSH 安装态与本机 .desktop-build 运行时树一致）：undici 7.29.0 / js-yaml 4.3.2 / argparse 2.0.1；undici 7.29.0 不满足 dshmarket 1.66.42 的 ^7.29.1，故另行随包 undici 7.29.1。",
+    "$comment": "以下包桌面运行时已自带且满足各预置包的声明范围，**不随包重复提供**（避免用 overrides 覆盖上游版本）。实测（%LOCALAPPDATA%\\Programs\\WorkNexus-DSH 安装态与本机 .desktop-build 运行时树一致）：undici 7.29.0 / js-yaml 4.3.2 / argparse 2.0.1；undici 7.29.0 不满足 dshmarket 1.66.45 的 ^7.29.1，故另行随包 undici 7.29.1。",
     "js-yaml": "^4.1.0（运行时 4.3.2 已满足）",
     "argparse": "^2.0.1（js-yaml 的依赖，运行时已含）",
     "ws": "^8.18.0（dsh-better-sidebar；运行时 8.22.0 已满足）",
     "yaml": "^2.9.1（dsh-better-sidebar；运行时 2.9.1 已满足）",
     "react/react-dom": "^18.2.0（三个插件；运行时 18.3.1 已满足）",
-    "@deepseek-ai/dsh-* 与 @deepseek-ai/cordis": "三个插件的宿主半边与客户端半边只引用这些已随包的包（逐文件实测：better-sidebar `lib/index.js` = dsh-llm/dsh-session/dsh-settings/dsh-subagent/dsh-tools/schemastery/ws/yaml；claude-style = client-ui-primitives/react/react-dom；skill-explorer = react + node 内置）。",
+    "@deepseek-ai/dsh-* 与 @deepseek-ai/cordis": "四个插件的宿主半边与客户端半边只引用这些已随包的包（逐文件实测：better-sidebar `lib/index.js` = dsh-llm/dsh-session/dsh-settings/dsh-subagent/dsh-tools/schemastery/ws/yaml；claude-style = client-ui-primitives/react/react-dom；archify = node 内置；skill-explorer = react + node 内置）。",
     "@codemirror/* 与 mermaid、d3、@iconify/*、@chevrotain/*、@upsetjs/venn.js、clsx、dompurify、react-icons": "dsh-better-sidebar 的**声明依赖**，但全部已被它自己的客户端 bundle 内联（`lib/client-mermaid.js` 6.9 MB、`lib/client-editor.js` 2.1 MB，逐文件实测这些文件不 import 上述包），运行时不需要，因此不随包。"
   },
   "packages": [
@@ -285,6 +285,16 @@
       "sha256": "9afb18af93f3317f788523d0c556255d535544d5da29a0ba24daa9e8004a14e4"
     },
     {
+      "name": "@formkit/auto-animate",
+      "version": "0.10.0",
+      "role": "runtime-dependency",
+      "license": "MIT",
+      "url": "https://registry.npmjs.org/@formkit/auto-animate/-/auto-animate-0.10.0.tgz",
+      "file": "formkit-auto-animate-0.10.0.tgz",
+      "bytes": 16853,
+      "sha256": "363d71ca5ec0c8eda97eb78f81668a910b87867126346541ec382063cc82ded5"
+    },
+    {
       "name": "@iconify/types",
       "version": "2.0.0",
       "role": "runtime-dependency",
@@ -466,14 +476,14 @@
     },
     {
       "name": "@linxin666/dsh-client-ui-skill-explorer",
-      "version": "0.4.6",
+      "version": "0.4.8",
       "role": "bundle-root",
       "license": "BSD-3-Clause",
-      "url": "https://registry.npmjs.org/@linxin666/dsh-client-ui-skill-explorer/-/dsh-client-ui-skill-explorer-0.4.6.tgz",
-      "file": "linxin666-dsh-client-ui-skill-explorer-0.4.6.tgz",
-      "bytes": 81162,
-      "sha256": "f02459a0313feb18c306680498e509385563b2b2ca9cb67e2ab428bdb5bb0375",
-      "roleLabel": "随发行版默认启用的市场插件（技能浏览器；宿主半边实现技能目录读取）"
+      "url": "https://registry.npmjs.org/@linxin666/dsh-client-ui-skill-explorer/-/dsh-client-ui-skill-explorer-0.4.8.tgz",
+      "file": "linxin666-dsh-client-ui-skill-explorer-0.4.8.tgz",
+      "bytes": 126222,
+      "sha256": "c9727b587c3ed2f96b009685792a114c0483bcf07f0569f895b01b0afce5379d",
+      "roleLabel": "随发行版默认启用的市场插件（技能浏览器；0.4.8 适配 DSH 0.2.1-rc.2）"
     },
     {
       "name": "@marijn/find-cluster-break",
@@ -494,6 +504,17 @@
       "file": "mermaid-js-parser-1.2.1.tgz",
       "bytes": 2228172,
       "sha256": "97eef1a4c37110e4836b6eb8dd6a348d989efb370a7672831df01042a7c323f4"
+    },
+    {
+      "name": "@tt-a1i/archify-dsh",
+      "version": "1.0.0",
+      "role": "bundle-root",
+      "license": "MIT",
+      "url": "https://registry.npmjs.org/@tt-a1i/archify-dsh/-/archify-dsh-1.0.0.tgz",
+      "file": "tt-a1i-archify-dsh-1.0.0.tgz",
+      "bytes": 1774405,
+      "sha256": "d009c4709000915e254d709b8f023b20d2cced142cd086e56f03d96baf370b50",
+      "roleLabel": "随发行版默认启用的市场插件（Archify 架构图 Skill 提供器）"
     },
     {
       "name": "@types/d3",
@@ -903,37 +924,37 @@
     },
     {
       "name": "dsh-better-sidebar",
-      "version": "0.25.0",
+      "version": "0.28.0",
       "role": "bundle-root",
       "license": "MIT",
-      "url": "https://registry.npmjs.org/dsh-better-sidebar/-/dsh-better-sidebar-0.25.0.tgz",
-      "file": "dsh-better-sidebar-0.25.0.tgz",
-      "bytes": 4412751,
-      "sha256": "3cf573803d65f566cf7c480b452711b231aa21a1f6d016e4929b61afb00043f4",
-      "roleLabel": "随发行版默认启用的市场插件（右侧栏增强；客户端半包自带打包，宿主半边只用已随包的 @deepseek-ai/dsh-*）"
+      "url": "https://registry.npmjs.org/dsh-better-sidebar/-/dsh-better-sidebar-0.28.0.tgz",
+      "file": "dsh-better-sidebar-0.28.0.tgz",
+      "bytes": 4778944,
+      "sha256": "40b7ce32a6d90bff069b3bb4d0e5dd692281e0ac0598163196b816ac12335b6f",
+      "roleLabel": "随发行版默认启用的市场插件（右侧栏增强；0.28.0 改用 connection 准入，兼容 DSH 0.2.1-rc.x）"
     },
     {
       "name": "dsh-claude-style",
-      "version": "0.13.2",
+      "version": "0.18.1",
       "role": "bundle-root",
       "license": "MIT",
-      "url": "https://registry.npmjs.org/dsh-claude-style/-/dsh-claude-style-0.13.2.tgz",
-      "file": "dsh-claude-style-0.13.2.tgz",
-      "bytes": 2241748,
-      "sha256": "bf396490f18d187ba3dd30c6a3ba61d9af86fa648a2d30b92bd74578e0da6b60",
-      "roleLabel": "随发行版默认启用的市场插件（界面皮肤；皮肤名与主题配置由企业侧预置）"
+      "url": "https://registry.npmjs.org/dsh-claude-style/-/dsh-claude-style-0.18.1.tgz",
+      "file": "dsh-claude-style-0.18.1.tgz",
+      "bytes": 1685138,
+      "sha256": "38350fd11a54e2c05cedff745689a991803f277accc2a0d70437a3bcd27082c0",
+      "roleLabel": "随发行版默认启用的市场插件（Claude Style 界面皮肤；0.18.1 兼容 DSH 0.2.1-rc.2）"
     },
     {
       "name": "dshmarket",
-      "version": "1.66.42",
+      "version": "1.66.45",
       "role": "bundle-root",
       "license": "MIT",
-      "url": "https://registry.npmjs.org/dshmarket/-/dshmarket-1.66.42.tgz",
-      "file": "dshmarket-1.66.42.tgz",
-      "bytes": 1338328,
-      "sha256": "c4fbe33d14dec8413ae7a7d3c951ec04c7569e9f70f79bd8cbbd47e2d423da64",
+      "url": "https://registry.npmjs.org/dshmarket/-/dshmarket-1.66.45.tgz",
+      "file": "dshmarket-1.66.45.tgz",
+      "bytes": 1350488,
+      "sha256": "5267bdcdf66ab16d349d7481ca0ae4caff8393f61fa902fca25ff2b608627415",
       "roleLabel": "插件市场 UI（`dsh.bundle.patch` 插入 `dsh-market`）",
-      "note": "客户端半包已由上游预构建（client/client.js 为官方 __ModuleLoader__.load 形态），本仓库不做二次构建；dsh.bundle.patch 单行插入 id=dsh-market。tarball 不含占位 dotfile，无需规范化。1.66.37 起适配 DSH 0.2.1 的 already-installed 语义：更新先 removeBundle 再 installBundle（上游 #896/#897）；1.66.42 保持该回退，并修正 release-age 假回滚、宿主重启归属、profile 锁恢复与 carrier/陈旧 release 判定（上游 #914/#912/#906/#925）。"
+      "note": "客户端半包已由上游预构建（client/client.js 为官方 __ModuleLoader__.load 形态），本仓库不做二次构建；dsh.bundle.patch 单行插入 id=dsh-market。tarball 不含占位 dotfile，无需规范化。1.66.37 起适配 DSH 0.2.1 的 already-installed 语义：更新先 removeBundle 再 installBundle（上游 #896/#897）；1.66.45 继续保留该回退，并纳入 1.66.43~45 的 bundle-in-use 恢复、npmName 兼容提示、更新意图日志、可选依赖归属、carrier 与新鲜版本判定修复。"
     },
     {
       "name": "undici",
@@ -946,7 +967,7 @@
       "sha256": "93b3abe22a9d2858938b5f3829a9fd8952392348ffed9057662ae846e2e46d54",
       "normalization": "strip-dotfile-placeholders",
       "normalizedSha256": "7b57ab002ad85acbabf95c6d388da87ba64090e12309868111fb8d951fe64132",
-      "note": "dshmarket 1.66.42 的 dependencies 要求 ^7.29.1（运行时自带的 7.29.0 不满足该范围），因此必须随包提供；上游 tarball 含 lib/llhttp/.gitkeep，按规范化规则剔除后发布。"
+      "note": "dshmarket 1.66.45 的 dependencies 要求 ^7.29.1（运行时自带的 7.29.0 不满足该范围），因此必须随包提供；上游 tarball 含 lib/llhttp/.gitkeep，按规范化规则剔除后发布。"
     }
   ]
 }

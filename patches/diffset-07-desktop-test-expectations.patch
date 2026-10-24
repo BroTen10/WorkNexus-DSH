@@ -353,26 +353,27 @@ index a1af8d54..e86ea3c5 100644
        const manager = new WindowsSignToolManager({ platformSpecificBuildOptions: config.win, getCscLink: () => undefined })
        expect(await manager.computedPublisherName.value).toEqual(['CN=Publisher,O=Company,C=CN'])
 diff --git a/apps/desktop/tests/project-manager.spec.ts b/apps/desktop/tests/project-manager.spec.ts
-index 1dd76b35..c811e70a 100644
+index 1dd76b35..d5b350b2 100644
 --- a/apps/desktop/tests/project-manager.spec.ts
 +++ b/apps/desktop/tests/project-manager.spec.ts
-@@ -32,6 +32,15 @@ function plugins(manager: DesktopProjectManager) {
+@@ -32,6 +32,16 @@ function plugins(manager: DesktopProjectManager) {
      installAnchor: join(manager.runtime.dsh, 'node_modules/@deepseek-ai/dsh/package.json') }).dependencies
      .map(({ name, version, enabled }) => ({ name, version, enabled }))
  }
-+// WorkNexus-DSH 差异集 02/10（2026-10-12 基线迁移就地同步）：随发行版预置的三个市场插件写在
++// WorkNexus-DSH 差异集 02/10（2026-10-12 基线迁移就地同步）：随发行版预置的四个市场插件写在
 +// `dsh.profile.bundles` 里，alpha.2 的 `readProfilePlugins` 会把它们作为「已安装插件」报出，
-+// 故官方用例的空清单/单插件期望按 DC-7 / DS-3 追加这三个条目（版本取
++// 故官方用例的空清单/单插件期望按 DC-7 / DS-3 追加这四个条目（版本取
 +// configs/vendor/third-party-bundles.lock.json）。
 +const WORKNEXUS_PRESET_PLUGINS = [
-+  { name: 'dsh-better-sidebar', version: '0.25.0', enabled: true },
-+  { name: 'dsh-claude-style', version: '0.13.2', enabled: true },
-+  { name: '@linxin666/dsh-client-ui-skill-explorer', version: '0.4.6', enabled: true },
++  { name: 'dsh-claude-style', version: '0.18.1', enabled: true },
++  { name: '@tt-a1i/archify-dsh', version: '1.0.0', enabled: true },
++  { name: '@linxin666/dsh-client-ui-skill-explorer', version: '0.4.8', enabled: true },
++  { name: 'dsh-better-sidebar', version: '0.28.0', enabled: true },
 +]
  function setup(): { root: string; manager: DesktopProjectManager } {
    const root = temporaryRoot()
    const dsh = join(root, 'resources', 'dsh')
-@@ -41,7 +50,6 @@ function setup(): { root: string; manager: DesktopProjectManager } {
+@@ -41,7 +51,6 @@ function setup(): { root: string; manager: DesktopProjectManager } {
  afterEach(() => {
    for (const root of roots.splice(0)) rmSync(root, { recursive: true, force: true })
  })
@@ -380,7 +381,7 @@ index 1dd76b35..c811e70a 100644
  describe('desktop external plugin profile', () => {
    it('preserves installed packages, profile state, and the lockfile when preparing a launch', async () => {
      const { manager } = setup()
-@@ -123,7 +131,11 @@ describe('desktop external plugin profile', () => {
+@@ -123,7 +132,11 @@ describe('desktop external plugin profile', () => {
      expect(manifest.dsh.profile.bundles).not.toContain('plugin')
      expect(manifest.dsh.profile.bundles).toContain('@deepseek-ai/dsh-web-app')
      await manager.applyRelease()
@@ -393,7 +394,7 @@ index 1dd76b35..c811e70a 100644
    })
  
    it('needs no runtime or package manifest when no plugins have been installed', async () => {
-@@ -182,7 +194,10 @@ describe('desktop external plugin profile', () => {
+@@ -182,7 +195,10 @@ describe('desktop external plugin profile', () => {
      await expect(manager.applyRelease()).resolves.toBeUndefined()
      expect(readFileSync(join(manager.paths.profile, '.DS_Store'), 'utf8')).toBe('metadata')
      expect(readFileSync(join(manager.paths.profile, 'user-file'), 'utf8')).toBe('retain')
@@ -405,7 +406,7 @@ index 1dd76b35..c811e70a 100644
      expect(existsSync(join(manager.paths.profile, 'desktop-runtime-state.json'))).toBe(false)
    })
  
-@@ -190,7 +205,7 @@ describe('desktop external plugin profile', () => {
+@@ -190,7 +206,7 @@ describe('desktop external plugin profile', () => {
      const { manager } = setup()
      await expect(manager.applyRelease()).resolves.toBeUndefined()
      await expect(manager.applyRelease()).resolves.toBeUndefined()
@@ -414,7 +415,7 @@ index 1dd76b35..c811e70a 100644
      expect(JSON.parse(readFileSync(join(manager.paths.profile, 'package.json'), 'utf8'))).toMatchObject({ dependencies: {} })
    })
  
-@@ -217,13 +232,18 @@ describe('desktop external plugin profile', () => {
+@@ -217,13 +233,18 @@ describe('desktop external plugin profile', () => {
      const { root, manager } = setup()
      await manager.applyRelease()
      seedPlugin(manager)
@@ -435,7 +436,7 @@ index 1dd76b35..c811e70a 100644
      expect(readFileSync(join(manager.paths.profile, 'node_modules/plugin/bundle.yml'), 'utf8')).toBe('[]\n')
    })
  
-@@ -235,7 +255,7 @@ describe('desktop external plugin profile', () => {
+@@ -235,7 +256,7 @@ describe('desktop external plugin profile', () => {
      runtimeFixture(dsh, '1.1.0', '24.18.0')
      const next = new DesktopProjectManager(manager.paths, { ...manager.runtime, dsh })
      await next.applyRelease()
@@ -444,7 +445,7 @@ index 1dd76b35..c811e70a 100644
    })
  
    it('allows peer version mismatches to reach Host startup and remain available for recovery', async () => {
-@@ -247,7 +267,7 @@ describe('desktop external plugin profile', () => {
+@@ -247,7 +268,7 @@ describe('desktop external plugin profile', () => {
      const next = new DesktopProjectManager(manager.paths, { ...manager.runtime, dsh })
      await expect(next.applyRelease()).resolves.toBeUndefined()
      await next.disableAllPlugins()
@@ -453,8 +454,3 @@ index 1dd76b35..c811e70a 100644
    })
  })
  
-@@ -330,3 +350,4 @@ describe('desktop link-backend projections', () => {
-     expect(existsSync(join(target, 'package.json'))).toBe(true)
-   })
- })
-+

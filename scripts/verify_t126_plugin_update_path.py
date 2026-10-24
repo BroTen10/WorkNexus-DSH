@@ -10,7 +10,7 @@
      `installBundle(spec)`；DSH 0.2.1 的 manager 对已安装包在跑 pnpm 之前
      就以 `already-installed` 拒绝，更新必须 `removeBundle` → install。
      `dshmarket@1.66.37` 已实现该回退（上游 #896/#897）；当前跟版的
-     `1.66.42` 继续保持，并修正了 release-age 等待期假回滚。
+     `1.66.45` 继续保持，并修正了 release-age 等待期假回滚。
   2. 启动补齐把市场装上的新版本强行改回随包版本，且不修 `pnpm-lock.yaml`。
      现在只做「向前同步」：低于随包版本才改，等于/高于一律保留。
 
@@ -45,7 +45,7 @@ RUNTIME = DESKTOP / ".desktop-build" / "targets" / "win-x64" / "dsh" / "node_mod
 LOCK = REPO / "configs" / "vendor" / "third-party-bundles.lock.json"
 BACKFILL = DESKTOP / "src" / "profile-bundle-backfill.ts"
 
-EXPECTED = {"dshmarket": "1.66.42", "undici": "7.29.1"}
+EXPECTED = {"dshmarket": "1.66.45", "undici": "7.29.1"}
 RESULTS: list[tuple[bool, str]] = []
 
 
@@ -97,7 +97,7 @@ const manager = {
   cancelInstall: async () => {},
 }
 const runtime = createOfficialDesktopRuntime(() => manager, 'desktop')
-const result = await runtime.runPlugin('desktop', ['add', 'dsh-claude-style@0.16.2'])
+const result = await runtime.runPlugin('desktop', ['add', 'dsh-claude-style@0.18.1'])
 console.log(JSON.stringify({ exitCode: result.exitCode, calls }))
 """.replace("__ENTRY__", json.dumps(entry.as_uri()))
     directory = Path(tempfile.mkdtemp(prefix="t126-probe-"))
@@ -141,15 +141,15 @@ def main() -> int:
     profile_source = read(RUNTIME / "dshmarket" / "lib" / "profile.js")
     record("function hasLoadableEntry" in profile_source and "hostDirectory" in profile_source
            and "findDshInstallDir" in profile_source,
-           "B3 carrier 判定读取宿主安装树，避免把仅挂载内置包的插件误删（1.66.42）")
+           "B3 carrier 判定读取宿主安装树，避免把仅挂载内置包的插件误删（1.66.45）")
 
     # C. 行为探针
     probe = run_reinstall_probe()
     calls = probe.get("calls")
     record(probe.get("exitCode") == 0
-           and calls == ["install:dsh-claude-style@0.16.2",
+           and calls == ["install:dsh-claude-style@0.18.1",
                          "remove:dsh-claude-style",
-                         "install:dsh-claude-style@0.16.2"],
+                         "install:dsh-claude-style@0.18.1"],
            f"C1 更新探针：install → remove → install，exit=0（实测 {probe}）")
 
     # D. 启动补齐只向前

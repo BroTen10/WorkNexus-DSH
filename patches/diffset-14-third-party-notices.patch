@@ -1,9 +1,9 @@
 diff --git a/WORKNEXUS-THIRD-PARTY-NOTICES.md b/WORKNEXUS-THIRD-PARTY-NOTICES.md
 new file mode 100644
-index 00000000..30250f66
+index 00000000..b47ee7a3
 --- /dev/null
 +++ b/WORKNEXUS-THIRD-PARTY-NOTICES.md
-@@ -0,0 +1,2564 @@
+@@ -0,0 +1,2609 @@
 +<!-- 由 scripts/gen_worknexus_notices.py 生成 —— 请勿手工编辑。
 +     重新生成：python scripts/gen_worknexus_notices.py
 +     校验：python scripts/verify_diffset14_third_party_notices.py -->
@@ -45,6 +45,7 @@ index 00000000..30250f66
 +| `@codemirror/state` | 6.7.6 | MIT | https://registry.npmjs.org/@codemirror/state/-/state-6.7.6.tgz | 随包预置插件的声明依赖（版本钉死随包，保证离线安装与可复现；客户端半边已自带打包） |
 +| `@codemirror/streamparser` | 6.0.0 | MIT | https://registry.npmjs.org/@codemirror/streamparser/-/streamparser-6.0.0.tgz | 随包预置插件的声明依赖（版本钉死随包，保证离线安装与可复现；客户端半边已自带打包） |
 +| `@codemirror/view` | 6.43.14 | MIT | https://registry.npmjs.org/@codemirror/view/-/view-6.43.14.tgz | 随包预置插件的声明依赖（版本钉死随包，保证离线安装与可复现；客户端半边已自带打包） |
++| `@formkit/auto-animate` | 0.10.0 | MIT | https://registry.npmjs.org/@formkit/auto-animate/-/auto-animate-0.10.0.tgz | 随包预置插件的声明依赖（版本钉死随包，保证离线安装与可复现；客户端半边已自带打包） |
 +| `@iconify/types` | 2.0.0 | MIT | https://registry.npmjs.org/@iconify/types/-/types-2.0.0.tgz | 随包预置插件的声明依赖（版本钉死随包，保证离线安装与可复现；客户端半边已自带打包） |
 +| `@iconify/utils` | 3.1.7 | MIT | https://registry.npmjs.org/@iconify/utils/-/utils-3.1.7.tgz | 随包预置插件的声明依赖（版本钉死随包，保证离线安装与可复现；客户端半边已自带打包） |
 +| `@lezer/common` | 1.5.3 | MIT | https://registry.npmjs.org/@lezer/common/-/common-1.5.3.tgz | 随包预置插件的声明依赖（版本钉死随包，保证离线安装与可复现；客户端半边已自带打包） |
@@ -63,9 +64,10 @@ index 00000000..30250f66
 +| `@lezer/rust` | 1.0.3 | MIT | https://registry.npmjs.org/@lezer/rust/-/rust-1.0.3.tgz | 随包预置插件的声明依赖（版本钉死随包，保证离线安装与可复现；客户端半边已自带打包） |
 +| `@lezer/xml` | 1.0.6 | MIT | https://registry.npmjs.org/@lezer/xml/-/xml-1.0.6.tgz | 随包预置插件的声明依赖（版本钉死随包，保证离线安装与可复现；客户端半边已自带打包） |
 +| `@lezer/yaml` | 1.0.4 | MIT | https://registry.npmjs.org/@lezer/yaml/-/yaml-1.0.4.tgz | 随包预置插件的声明依赖（版本钉死随包，保证离线安装与可复现；客户端半边已自带打包） |
-+| `@linxin666/dsh-client-ui-skill-explorer` | 0.4.6 | BSD-3-Clause | https://registry.npmjs.org/@linxin666/dsh-client-ui-skill-explorer/-/dsh-client-ui-skill-explorer-0.4.6.tgz | 随发行版默认启用的市场插件（技能浏览器；宿主半边实现技能目录读取） |
++| `@linxin666/dsh-client-ui-skill-explorer` | 0.4.8 | BSD-3-Clause | https://registry.npmjs.org/@linxin666/dsh-client-ui-skill-explorer/-/dsh-client-ui-skill-explorer-0.4.8.tgz | 随发行版默认启用的市场插件（技能浏览器；0.4.8 适配 DSH 0.2.1-rc.2） |
 +| `@marijn/find-cluster-break` | 1.0.4 | MIT | https://registry.npmjs.org/@marijn/find-cluster-break/-/find-cluster-break-1.0.4.tgz | 随包预置插件的声明依赖（版本钉死随包，保证离线安装与可复现；客户端半边已自带打包） |
 +| `@mermaid-js/parser` | 1.2.1 | MIT | https://registry.npmjs.org/@mermaid-js/parser/-/parser-1.2.1.tgz | 随包预置插件的声明依赖（版本钉死随包，保证离线安装与可复现；客户端半边已自带打包） |
++| `@tt-a1i/archify-dsh` | 1.0.0 | MIT | https://registry.npmjs.org/@tt-a1i/archify-dsh/-/archify-dsh-1.0.0.tgz | 随发行版默认启用的市场插件（Archify 架构图 Skill 提供器） |
 +| `@types/d3` | 7.4.3 | MIT | https://registry.npmjs.org/@types/d3/-/d3-7.4.3.tgz | 随包预置插件的声明依赖（版本钉死随包，保证离线安装与可复现；客户端半边已自带打包） |
 +| `@types/d3-array` | 3.2.2 | MIT | https://registry.npmjs.org/@types/d3-array/-/d3-array-3.2.2.tgz | 随包预置插件的声明依赖（版本钉死随包，保证离线安装与可复现；客户端半边已自带打包） |
 +| `@types/d3-axis` | 3.0.6 | MIT | https://registry.npmjs.org/@types/d3-axis/-/d3-axis-3.0.6.tgz | 随包预置插件的声明依赖（版本钉死随包，保证离线安装与可复现；客户端半边已自带打包） |
@@ -100,9 +102,9 @@ index 00000000..30250f66
 +| `@types/geojson` | 7946.0.16 | MIT | https://registry.npmjs.org/@types/geojson/-/geojson-7946.0.16.tgz | 随包预置插件的声明依赖（版本钉死随包，保证离线安装与可复现；客户端半边已自带打包） |
 +| `@types/trusted-types` | 2.0.7 | MIT | https://registry.npmjs.org/@types/trusted-types/-/trusted-types-2.0.7.tgz | 随包预置插件的声明依赖（版本钉死随包，保证离线安装与可复现；客户端半边已自带打包） |
 +| `@upsetjs/venn.js` | 2.0.0 | MIT | https://registry.npmjs.org/@upsetjs/venn.js/-/venn.js-2.0.0.tgz | 随包预置插件的声明依赖（版本钉死随包，保证离线安装与可复现；客户端半边已自带打包） |
-+| `dsh-better-sidebar` | 0.25.0 | MIT | https://registry.npmjs.org/dsh-better-sidebar/-/dsh-better-sidebar-0.25.0.tgz | 随发行版默认启用的市场插件（右侧栏增强；客户端半包自带打包，宿主半边只用已随包的 @deepseek-ai/dsh-*） |
-+| `dsh-claude-style` | 0.13.2 | MIT | https://registry.npmjs.org/dsh-claude-style/-/dsh-claude-style-0.13.2.tgz | 随发行版默认启用的市场插件（界面皮肤；皮肤名与主题配置由企业侧预置） |
-+| `dshmarket` | 1.66.42 | MIT | https://registry.npmjs.org/dshmarket/-/dshmarket-1.66.42.tgz | 插件市场 UI（`dsh.bundle.patch` 插入 `dsh-market`） |
++| `dsh-better-sidebar` | 0.28.0 | MIT | https://registry.npmjs.org/dsh-better-sidebar/-/dsh-better-sidebar-0.28.0.tgz | 随发行版默认启用的市场插件（右侧栏增强；0.28.0 改用 connection 准入，兼容 DSH 0.2.1-rc.x） |
++| `dsh-claude-style` | 0.18.1 | MIT | https://registry.npmjs.org/dsh-claude-style/-/dsh-claude-style-0.18.1.tgz | 随发行版默认启用的市场插件（Claude Style 界面皮肤；0.18.1 兼容 DSH 0.2.1-rc.2） |
++| `dshmarket` | 1.66.45 | MIT | https://registry.npmjs.org/dshmarket/-/dshmarket-1.66.45.tgz | 插件市场 UI（`dsh.bundle.patch` 插入 `dsh-market`） |
 +| `undici` | 7.29.1 | MIT | https://registry.npmjs.org/undici/-/undici-7.29.1.tgz | 随包预置插件的声明依赖（版本钉死随包，保证离线安装与可复现；客户端半边已自带打包） |
 +
 +## 2. 我方自研组件
@@ -995,6 +997,18 @@ index 00000000..30250f66
 +THE SOFTWARE.
 +```
 +
++### `@formkit/auto-animate` 0.10.0（MIT）
++
++```
++Copyright 2022 FormKit Inc.
++
++Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
++
++The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
++
++THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
++```
++
 +### `@iconify/types` 2.0.0（MIT）
 +
 +```
@@ -1463,7 +1477,7 @@ index 00000000..30250f66
 +THE SOFTWARE.
 +```
 +
-+### `@linxin666/dsh-client-ui-skill-explorer` 0.4.6（BSD-3-Clause）
++### `@linxin666/dsh-client-ui-skill-explorer` 0.4.8（BSD-3-Clause）
 +
 +```
 +BSD 3-Clause License
@@ -1529,6 +1543,33 @@ index 00000000..30250f66
 +The MIT License (MIT)
 +
 +Copyright (c) 2023 Yokozuna59
++
++Permission is hereby granted, free of charge, to any person obtaining a copy
++of this software and associated documentation files (the "Software"), to deal
++in the Software without restriction, including without limitation the rights
++to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
++copies of the Software, and to permit persons to whom the Software is
++furnished to do so, subject to the following conditions:
++
++The above copyright notice and this permission notice shall be included in all
++copies or substantial portions of the Software.
++
++THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
++IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
++AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
++LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
++OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
++SOFTWARE.
++```
++
++### `@tt-a1i/archify-dsh` 1.0.0（MIT）
++
++```
++MIT License
++
++Copyright (c) 2026 tt-a1i (Archify)
++Copyright (c) 2025 Cocoon AI
 +
 +Permission is hereby granted, free of charge, to any person obtaining a copy
 +of this software and associated documentation files (the "Software"), to deal
@@ -2434,7 +2475,7 @@ index 00000000..30250f66
 +SOFTWARE.
 +```
 +
-+### `dsh-better-sidebar` 0.25.0（MIT）
++### `dsh-better-sidebar` 0.28.0（MIT）
 +
 +```
 +MIT License
@@ -2460,7 +2501,7 @@ index 00000000..30250f66
 +SOFTWARE.
 +```
 +
-+### `dsh-claude-style` 0.13.2（MIT）
++### `dsh-claude-style` 0.18.1（MIT）
 +
 +```
 +MIT License
@@ -2487,19 +2528,23 @@ index 00000000..30250f66
 +
 +---
 +
++Sodium engine notice: the files under `packages/client/src/features/sodium/` and
++`packages/engine/src/sheet-rewrite.ts` are the Sodium rendering engine. They are
++licensed under the PolyForm Shield License 1.0.0, **not** under the MIT license
++above; the terms are in `packages/client/src/features/sodium/LICENSE`. Read,
++change and redistribute them, but not to provide a product competing with this
++plugin. Releases up to and including 0.17.0 were published under the MIT license;
++this license applies to the releases published after it.
++
 +Font files notice:
 +
-+- `packages/assets/src/fonts/anthropic/AnthropicSansWebText.ttf` and
-+  `packages/assets/src/fonts/anthropic/AnthropicSerifWebText.ttf` are
++- `packages/assets/src/fonts/anthropic/AnthropicSansWebText.ttf`,
++  `packages/assets/src/fonts/anthropic/AnthropicSerifWebText.ttf` and
++  `packages/assets/src/fonts/anthropic/AnthropicMonoWeb.ttf` are
 +  proprietary typefaces of Anthropic, extracted from Anthropic's web products.
 +  They are included in this repository for personal use only and are **not**
 +  covered by the MIT license above; all rights remain with Anthropic. The npm
 +  package does not ship these files.
-+Provider icon notice: the files under `packages/assets/src/icons/providers/` (and their
-+`lib/icons/providers/` build copy) are vendored from farion1231/cc-switch
-+(MIT License, Copyright (c) 2025 Jason Young). They are redistributed under
-+the MIT License; brand names and logos remain trademarks of their respective
-+owners.
 +
 +- `packages/assets/src/fonts/JetBrainsMonoVariable.ttf` and
 +  `packages/assets/src/fonts/JetBrainsMonoItalicVariable.ttf` are JetBrains Mono,
@@ -2508,16 +2553,16 @@ index 00000000..30250f66
 +  `lib/fonts/`). They may be redistributed with this plugin.
 +
 +Crab artwork notice: the pixel crab (Clawd) is a character of Anthropic, and
-+all rights in it remain with Anthropic. `packages/assets/src/mascot/crab-laptop-body.png`
-+and `packages/assets/src/mascot/crab-laptop-ink.png` are frames of Claude Code's own
-+animation; the sheets under `packages/assets/src/mascot/crab/` are drawn by this project
++all rights in it remain with Anthropic. `packages/assets/src/mascot/crab/crab-laptop-body.png`
++and `packages/assets/src/mascot/crab/crab-laptop-ink.png` are frames of Claude Code's own
++animation; the remaining sheets in that directory are drawn by this project
 +after that character (by `scripts/draw-crab.py`, which carries the drawings).
 +These files, and their copies inlined into `lib/client.js`, are **not** covered
 +by the MIT license above. This plugin is an unofficial fan work, not affiliated
 +with or endorsed by Anthropic.
 +```
 +
-+### `dshmarket` 1.66.42（MIT）
++### `dshmarket` 1.66.45（MIT）
 +
 +```
 +MIT License

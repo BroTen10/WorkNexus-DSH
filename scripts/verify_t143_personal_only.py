@@ -3,8 +3,8 @@
 
 断言：
   P1  企业目录不存在（bundles/plugins/packages/services）
-  P2  prepare-package-set.ts 无 @worknexus 根；默认 roots = dshmarket + 三预置
-  P3  project-manager.ts profile bundles 无 @worknexus；只含三预置
+  P2  prepare-package-set.ts 无 @worknexus 根；默认 roots = dshmarket + 四预置
+  P3  project-manager.ts profile bundles 无 @worknexus；只含四预置
   P4  profile-bundle-backfill.ts 清理 @worknexus/* + 回填预置；行为探针通过
   P5  .worknexus-packed 无企业 tgz；4 个预置根 + 86 闭包齐全
   P6  package_desktop_win_unsigned.py --dry-run 退出 0
@@ -72,9 +72,9 @@ def check_p2() -> None:
     text = read(DESKTOP / "scripts" / "prepare-package-set.ts")
     has_enterprise = "@worknexus/" in text
     has_market = "'dshmarket'" in text
-    has_three = all(name in text for name in ("dsh-better-sidebar", "dsh-claude-style", "@linxin666/dsh-client-ui-skill-explorer"))
-    record("P2 包集根无企业包", not has_enterprise and has_market and has_three,
-           f"@worknexus={has_enterprise} dshmarket={has_market} 三预置={has_three}")
+    has_four = all(name in text for name in ("dsh-better-sidebar", "dsh-claude-style", "@tt-a1i/archify-dsh", "@linxin666/dsh-client-ui-skill-explorer"))
+    record("P2 包集根无企业包", not has_enterprise and has_market and has_four,
+           f"@worknexus={has_enterprise} dshmarket={has_market} 四预置={has_four}")
 
 
 def check_p3() -> None:
@@ -90,10 +90,10 @@ def check_p3() -> None:
         "@worknexus/ent-client",
     )
     hits = [name for name in enterprise_names if name in text]
-    has_three = all(name in text for name in ("dsh-better-sidebar", "dsh-claude-style", "@linxin666/dsh-client-ui-skill-explorer"))
+    has_four = all(name in text for name in ("dsh-better-sidebar", "dsh-claude-style", "@tt-a1i/archify-dsh", "@linxin666/dsh-client-ui-skill-explorer"))
     market_outside_bundles = "'dshmarket'" not in text
-    record("P3 profile 初值无企业 bundle / 市场不入 bundle", not hits and has_three and market_outside_bundles,
-           f"企业 bundle={hits or '无'} 三预置={has_three} dshmarket_not_in_bundles={market_outside_bundles}")
+    record("P3 profile 初值无企业 bundle / 市场不入 bundle", not hits and has_four and market_outside_bundles,
+           f"企业 bundle={hits or '无'} 四预置={has_four} dshmarket_not_in_bundles={market_outside_bundles}")
 
 
 def check_p4_static() -> None:
@@ -104,6 +104,7 @@ def check_p4_static() -> None:
     has_market = (
         "WORKNEXUS_MARKET_PLUGIN = 'dshmarket'" in text
         and "WORKNEXUS_MARKET_ENTRY_ID = 'dsh-market'" in text
+        and "WORKNEXUS_MARKET_ENTRY = '../../dshmarket/lib/index.js'" in text
         and "backfillProfileMarketPlugin" in text
         and "'- insert:'" in text
     )
@@ -119,9 +120,10 @@ def check_p4_behavior() -> None:
             "name": "dsh-profile-desktop",
             "private": True,
             "dependencies": {
-                "dsh-better-sidebar": "0.25.0",
-                "dsh-claude-style": "0.13.2",
-                "@linxin666/dsh-client-ui-skill-explorer": "0.4.6",
+                "dsh-better-sidebar": "0.28.0",
+                "dsh-claude-style": "0.18.1",
+                "@tt-a1i/archify-dsh": "1.0.0",
+                "@linxin666/dsh-client-ui-skill-explorer": "0.4.8",
             },
             "dsh": {
                 "profile": {
@@ -158,7 +160,7 @@ def check_p4_behavior() -> None:
         updated = json.loads(manifest.read_text(encoding="utf-8"))
         bundles = updated["dsh"]["profile"]["bundles"]
         no_enterprise = all(not name.startswith("@worknexus/") for name in bundles)
-        presets = ["dsh-better-sidebar", "dsh-claude-style", "@linxin666/dsh-client-ui-skill-explorer"]
+        presets = ["dsh-claude-style", "@tt-a1i/archify-dsh", "@linxin666/dsh-client-ui-skill-explorer", "dsh-better-sidebar"]
         has_presets = all(name in bundles for name in presets)
         order_ok = bundles[:3] == ["@deepseek-ai/dsh-base", "dsh-better-sidebar", "custom-bundle"]
         backup = probe / "package.json.bak-t143"
@@ -173,41 +175,52 @@ def check_p4_behavior() -> None:
 def check_p4_materialization() -> None:
     probe = Path(tempfile.mkdtemp(prefix="wn-t143-materialize-"))
     try:
-        profile = probe / "profile"
+        profile = probe / "profiles" / "desktop"
         runtime = probe / "runtime"
         node_modules = profile / "node_modules"
         runtime_modules = runtime / "node_modules"
         (profile / "node_modules" / "yaml").mkdir(parents=True)
         (profile / "node_modules" / "yaml" / "index.js").write_text("partial", encoding="utf-8")
+        legacy_market = profile / "node_modules" / "dshmarket"
+        legacy_market.mkdir(parents=True)
+        (legacy_market / "package.json").write_text(
+            json.dumps({"name": "dshmarket", "version": "1.66.45"}, ensure_ascii=False),
+            encoding="utf-8",
+        )
         (profile / "package.json").write_text(json.dumps({
             "name": "dsh-profile-desktop",
             "private": True,
             "dependencies": {
-                "dsh-better-sidebar": "0.25.0",
-                "dsh-claude-style": "0.13.2",
-                "@linxin666/dsh-client-ui-skill-explorer": "0.4.6",
+                "dsh-better-sidebar": "0.28.0",
+                "dsh-claude-style": "0.18.1",
+                "@tt-a1i/archify-dsh": "1.0.0",
+                "@linxin666/dsh-client-ui-skill-explorer": "0.4.8",
             },
             "dsh": {"profile": {"bundles": [
                 "@deepseek-ai/dsh-base",
                 "@deepseek-ai/dsh-web-app",
-                "dsh-better-sidebar",
                 "dsh-claude-style",
+                "@tt-a1i/archify-dsh",
                 "@linxin666/dsh-client-ui-skill-explorer",
+                "dsh-better-sidebar",
             ]}},
         }, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         (profile / "cordis.patch.yml").write_text("[]\n", encoding="utf-8")
 
         packages = {
-            "dsh-better-sidebar": {"name": "dsh-better-sidebar", "version": "0.25.0",
+            "dsh-better-sidebar": {"name": "dsh-better-sidebar", "version": "0.28.0",
                                    "dependencies": {"yaml": "^2.9.1"}},
-            "dsh-claude-style": {"name": "dsh-claude-style", "version": "0.13.2"},
+            "dsh-claude-style": {"name": "dsh-claude-style", "version": "0.18.1"},
+            "@tt-a1i/archify-dsh": {"name": "@tt-a1i/archify-dsh", "version": "1.0.0"},
             "@linxin666/dsh-client-ui-skill-explorer": {
-                "name": "@linxin666/dsh-client-ui-skill-explorer", "version": "0.4.6",
+                "name": "@linxin666/dsh-client-ui-skill-explorer", "version": "0.4.8",
             },
-            "dshmarket": {"name": "dshmarket", "version": "1.66.42",
+            "dshmarket": {"name": "dshmarket", "version": "1.66.45",
                           "dependencies": {"js-yaml": "^4.3.2", "undici": "^7.29.1"}},
             "yaml": {"name": "yaml", "version": "2.9.1"},
-            "js-yaml": {"name": "js-yaml", "version": "4.3.2"},
+            "js-yaml": {"name": "js-yaml", "version": "4.3.2",
+                        "dependencies": {"argparse": "^2.0.1"}},
+            "argparse": {"name": "argparse", "version": "2.0.1"},
             "undici": {"name": "undici", "version": "7.29.1"},
         }
         for name, manifest in packages.items():
@@ -239,22 +252,30 @@ def check_p4_materialization() -> None:
         result = json.loads(proc.stdout.strip().splitlines()[-1])
         patch = read(profile / "cordis.patch.yml")
         required = (
-            profile / "node_modules" / "dshmarket" / "package.json",
             profile / "node_modules" / "yaml" / "package.json",
-            profile / "node_modules" / "js-yaml" / "package.json",
-            profile / "node_modules" / "undici" / "package.json",
+            probe / "dshmarket" / "package.json",
+            probe / "dshmarket" / "node_modules" / "js-yaml" / "package.json",
+            probe / "dshmarket" / "node_modules" / "argparse" / "package.json",
+            probe / "dshmarket" / "node_modules" / "undici" / "package.json",
         )
+        explicit_path = "name: '../../dshmarket/lib/index.js'" in patch
         ok = (
             result["seeded"] is True
             and result["seededAgain"] is False
             and "- insert:" in patch
             and "- id: dsh-market" in patch
-            and "name: 'dshmarket'" in patch
+            and explicit_path
             and all(path.is_file() for path in required)
+            and not legacy_market.exists()
             and result["second"]["copied"] == []
         )
         record("P4 市场与依赖闭包探针", ok,
-               f"market_insert={'- insert:' in patch and '- id: dsh-market' in patch} repaired={[p.name for p in required]} "
+               f"seeded={result['seeded']} seeded_again={result['seededAgain']} "
+               f"market_insert={'- insert:' in patch and '- id: dsh-market' in patch} "
+               f"explicit_path={explicit_path} "
+               f"repaired={[str(p.relative_to(probe)) for p in required]} "
+               f"missing={[str(p.relative_to(probe)) for p in required if not p.is_file()]} "
+               f"legacy_removed={not legacy_market.exists()} "
                f"first_copied={result['first']['copied']} second_copied={result['second']['copied']}")
     finally:
         shutil.rmtree(probe, ignore_errors=True)
@@ -267,9 +288,10 @@ def check_p5() -> None:
     enterprise = sorted(name for name in produced if name.startswith("worknexus-"))
     roots = {
         "dshmarket",
-        "dsh-better-sidebar",
         "dsh-claude-style",
+        "@tt-a1i/archify-dsh",
         "@linxin666/dsh-client-ui-skill-explorer",
+        "dsh-better-sidebar",
     }
     root_files = {item["file"] for item in lock.get("packages", []) if item.get("name") in roots}
     ok = (len(produced) == len(expected) and not enterprise and root_files.issubset(produced))

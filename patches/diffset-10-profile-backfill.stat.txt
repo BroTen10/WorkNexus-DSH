@@ -1,2 +1,2 @@
- apps/desktop/src/profile-bundle-backfill.ts | 536 ++++++++++++++++++++++++++++
- 1 file changed, 536 insertions(+)
+ apps/desktop/src/profile-bundle-backfill.ts | 617 ++++++++++++++++++++++++++++
+ 1 file changed, 617 insertions(+)

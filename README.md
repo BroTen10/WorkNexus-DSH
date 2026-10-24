@@ -1,6 +1,6 @@
 # WorkNexus-DSH（个人版宿主）
 
-> 基于官方 **DSH（DeepSeek Harness）** 桌面端的个人版宿主仓：保留客户端壳、品牌与安装器差异集、基础 profile、插件市场与三个预置插件；企业 bundle、企业插件与控制面不在本仓。
+> 基于官方 **DSH（DeepSeek Harness）** 桌面端的个人版宿主仓：保留客户端壳、品牌与安装器差异集、基础 profile、插件市场与四个预置插件；企业 bundle、企业插件与控制面不在本仓。
 
 WorkNexus-DSH 不是对 DSH 内核的替代实现。进程与运行时管理、profile 初始化、插件装载与生命周期、更新与恢复、诊断、凭据存储、会话交互一律采用官方设计；个性化差异只落在品牌、安装器、更新源与预置清单等白名单内，并以可枚举、可回滚的补丁形式登记。
 
@@ -35,7 +35,7 @@ WorkNexus-DSH 不是对 DSH 内核的替代实现。进程与运行时管理、p
 ## 快速开始
 
 ```powershell
-# 取回 dshmarket + 三个预置插件及其闭包（86 个 tgz）
+# 取回 dshmarket + 四个预置插件及其闭包（88 个 tgz）
 python scripts/pack_presets.py
 
 # 出包前置检查（不执行打包）
@@ -66,11 +66,13 @@ python scripts/package_desktop_win_unsigned.py
 
 ## 质量门禁
 
-仓库当前有 **14 个可复跑门禁脚本**：9 个任务/宿主门禁（T-020 / T-021 / T-022 / T-027 / T-107 / T-108 / T-125 / T-126 / T-143）与 5 个差异集门禁（09 / 11 / 12 / 13 / 14）。统一形态为：先探活、再跑探针、逐项输出 `[OK]`/`[FAIL]`，出现任一 `[FAIL]` 即退出码 1。
+仓库当前有 **16 个可复跑门禁脚本**：11 个任务/宿主门禁（T-020 / T-021 / T-022 / T-027 / T-107 / T-108 / T-125 / T-126 / T-143 / T-147 / T-148）与 5 个差异集门禁（09 / 11 / 12 / 13 / 14）。统一形态为：先探活、再跑探针、逐项输出 `[OK]`/`[FAIL]`，出现任一 `[FAIL]` 即退出码 1。
 
 ```powershell
 python scripts/verify_t143_personal_only.py
 python scripts/verify_t126_plugin_update_path.py
+python scripts/verify_t147_plugin_update_stability.py
+python scripts/verify_t148_latest_bundles.py
 python scripts/verify_diffset14_third_party_notices.py
 ```
 
@@ -90,7 +92,7 @@ python scripts/gen_worknexus_notices.py --check
 
 ## 第三方组件与合规
 
-本发行版在官方 bundle 之外预置了插件市场 `dshmarket`（当前 **1.66.42**）与三个市场插件（`dsh-better-sidebar` 0.25.0、`dsh-claude-style` 0.13.2、`@linxin666/dsh-client-ui-skill-explorer` 0.4.6），并随包提供运行依赖 `undici` 7.29.1。
+本发行版在官方 bundle 之外预置了插件市场 `dshmarket`（当前 **1.66.45**）与四个市场插件（`dsh-better-sidebar` 0.28.0、`dsh-claude-style` 0.18.1、`@tt-a1i/archify-dsh` 1.0.0、`@linxin666/dsh-client-ui-skill-explorer` 0.4.8），并随包提供运行依赖 `undici` 7.29.1。市场运行时位于 profile 外，避免任意插件升级时被 pnpm 移走。
 
 上游生成的 `THIRD_PARTY_NOTICES.md` 只扫上游 workspace，不覆盖以 tgz 分层预置的组件；本发行版另附根文件 `WORKNEXUS-THIRD-PARTY-NOTICES.md`（差异集 14），内容由 `scripts/gen_worknexus_notices.py` 从 `configs/vendor/third-party-bundles.lock.json` 与 `configs/vendor/licenses/*` 确定性生成，并随安装包落盘到 `resources/`。
 
@@ -99,7 +101,11 @@ python scripts/gen_worknexus_notices.py --check
 唯一入口是 [`docs/开发文档索引.md`](docs/开发文档索引.md)。常用文档：
 
 - 差异集：[`docs/差异集清单.md`](docs/差异集清单.md)
-- 插件市场跟版：[`docs/插件市场跟版_1.66.42_T-144.md`](docs/插件市场跟版_1.66.42_T-144.md)
+- 预置侧边栏兼容修复：[`docs/预置侧边栏兼容修复_T-145.md`](docs/预置侧边栏兼容修复_T-145.md)
+- 四插件最新预置：[`docs/四插件最新预置_T-146.md`](docs/四插件最新预置_T-146.md)
+- 插件市场更新稳定性修复：[`docs/插件市场更新稳定性修复_T-147.md`](docs/插件市场更新稳定性修复_T-147.md)
+- 插件市场与预置插件最新版：[`docs/插件市场与预置插件最新版_T-148.md`](docs/插件市场与预置插件最新版_T-148.md)
+- 插件市场跟版历史：[`docs/插件市场跟版_1.66.42_T-144.md`](docs/插件市场跟版_1.66.42_T-144.md)
 - 插件市场更新修复：[`docs/插件市场更新失败修复_T-126.md`](docs/插件市场更新失败修复_T-126.md)
 - 个人版宿主清理：[`docs/个人版宿主清理_T-143.md`](docs/个人版宿主清理_T-143.md)
 

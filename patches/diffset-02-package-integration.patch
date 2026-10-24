@@ -54,7 +54,7 @@ index 4b9cd27a..48276863 100644
        entitlementsInherit: fileURLToPath(new URL('./macos-entitlements.plist', import.meta.url)),
        // Prepared runtime files retain their signatures; PAK resources are sealed by their enclosing bundle.
 diff --git a/apps/desktop/scripts/prepare-package-set.ts b/apps/desktop/scripts/prepare-package-set.ts
-index 7e7d62ee..9007c211 100644
+index 7e7d62ee..3d6993aa 100644
 --- a/apps/desktop/scripts/prepare-package-set.ts
 +++ b/apps/desktop/scripts/prepare-package-set.ts
 @@ -4,6 +4,7 @@ import { createHash } from 'node:crypto'
@@ -65,24 +65,25 @@ index 7e7d62ee..9007c211 100644
    globSync,
    mkdirSync,
    readFileSync,
-@@ -29,8 +30,26 @@ import { resolveDesktopTargetBuildPaths } from './desktop-build-paths.mjs'
+@@ -29,8 +30,27 @@ import { resolveDesktopTargetBuildPaths } from './desktop-build-paths.mjs'
  
  const DSH_PACKAGE = '@deepseek-ai/dsh'
  const ROOT_PACKAGES = [DSH_PACKAGE, DESKTOP_HOST_PACKAGE] as const
 +/**
 + * WorkNexus-DSH 个人版：包集闭包的**额外根**。
-+ * 个人版只保留插件市场与三个预置插件；它们由 `python scripts/pack_presets.py`
++ * 个人版只保留插件市场与四个预置插件；它们由 `python scripts/pack_presets.py`
 + * 打包后经 `--from`/默认输入目录进入包集；缺目录则闭包自动不含预置层。
 + */
 +const PERSONAL_PRESET_ROOTS = [
 +  // D-1：个人版保留插件市场。
 +  'dshmarket',
-+  // 2026-10-09 决策人指令「随发行版默认启用」的三个市场插件（MIT / MIT / BSD-3-Clause，
++  // 决策人指令「随发行版默认启用」的四个市场插件（MIT / MIT / MIT / BSD-3-Clause，
 +  // 版本与 sha256 见 `configs/vendor/third-party-bundles.lock.json`）。同样必须作为闭包根，
 +  // 否则 tgz 会被静默丢弃，而它们是 `dsh.profile.bundles` 的成员。
-+  'dsh-better-sidebar',
 +  'dsh-claude-style',
++  '@tt-a1i/archify-dsh',
 +  '@linxin666/dsh-client-ui-skill-explorer',
++  'dsh-better-sidebar',
 +] as const
  const APP_ROOT = resolve(import.meta.dirname, '..')
  const REPOSITORY_ROOT = resolve(APP_ROOT, '..', '..')
@@ -92,7 +93,7 @@ index 7e7d62ee..9007c211 100644
  
  const REQUIRED_DEPENDENCY_SECTIONS = ['dependencies', 'peerDependencies'] as const
  const OPTIONAL_DEPENDENCY_SECTION = 'optionalDependencies'
-@@ -58,6 +77,7 @@ function dependencyNames(manifest: Readonly<Record<string, unknown>>, section: s
+@@ -58,6 +78,7 @@ function dependencyNames(manifest: Readonly<Record<string, unknown>>, section: s
   */
  export function selectDesktopPackageClosure(
    available: ReadonlyMap<string, PackedDesktopPackage>,
@@ -100,7 +101,7 @@ index 7e7d62ee..9007c211 100644
  ): PackedDesktopPackage[] {
    const workspace = yaml.load(readFileSync(join(REPOSITORY_ROOT, 'pnpm-workspace.yaml'), 'utf8')) as { packages: string[] }
    const workspaceNames = new Set(globSync(workspace.packages.map(pattern => `${pattern}/package.json`), { cwd: REPOSITORY_ROOT })
-@@ -84,6 +104,10 @@ export function selectDesktopPackageClosure(
+@@ -84,6 +105,10 @@ export function selectDesktopPackageClosure(
      if (!available.has(name)) throw new Error(`desktop package set: packed inputs omit ${name}`)
      visit(name)
    }
@@ -111,7 +112,7 @@ index 7e7d62ee..9007c211 100644
    return [...selected.entries()].sort(([left], [right]) => left.localeCompare(right)).map(([, packed]) => packed)
  }
  
-@@ -128,8 +152,10 @@ export function assertDesktopHostPackageFiles(files: readonly string[]): void {
+@@ -128,8 +153,10 @@ export function assertDesktopHostPackageFiles(files: readonly string[]): void {
  }
  
  /** Prepare a package set from release tarball directories. */
@@ -124,7 +125,7 @@ index 7e7d62ee..9007c211 100644
    const host = selected.find(packed => packed.manifest.name === DESKTOP_HOST_PACKAGE)
    if (host === undefined) throw new Error(`desktop package set: selected closure omits ${DESKTOP_HOST_PACKAGE}`)
    assertDesktopHostPackageFiles(tarballFiles(host.tarball))
-@@ -164,6 +190,7 @@ function main(): void {
+@@ -164,6 +191,7 @@ function main(): void {
      buildPaths.packedDsh,
      buildPaths.packedVendor,
      buildPaths.packedLandlock,
@@ -132,7 +133,7 @@ index 7e7d62ee..9007c211 100644
    ]
    const { values } = parseArgs({
      options: { from: { type: 'string', multiple: true }, out: { type: 'string' } },
-@@ -171,6 +198,12 @@ function main(): void {
+@@ -171,6 +199,12 @@ function main(): void {
    })
    const inputs = (values.from ?? defaultInputs).map(path => resolve(REPOSITORY_ROOT, path))
    const output = values.out === undefined ? buildPaths.packageSet : resolve(REPOSITORY_ROOT, values.out)
@@ -146,10 +147,10 @@ index 7e7d62ee..9007c211 100644
    console.log(`desktop package set: prepared ${output}`)
  }
 diff --git a/apps/desktop/src/project-manager.ts b/apps/desktop/src/project-manager.ts
-index 270d87d6..6446d9d5 100644
+index 270d87d6..924a5dc2 100644
 --- a/apps/desktop/src/project-manager.ts
 +++ b/apps/desktop/src/project-manager.ts
-@@ -25,11 +25,30 @@ import { readDesktopRuntime } from './runtime-tree.ts'
+@@ -25,11 +25,31 @@ import { readDesktopRuntime } from './runtime-tree.ts'
  import {
    initProfile, PROFILE_TEMPLATES, removeLinkProjections, sanitizeProfile, type ProfileTemplate,
  } from '@deepseek-ai/dsh-app-boot'
@@ -169,18 +170,19 @@ index 270d87d6..6446d9d5 100644
 +// profile 初值与原生恢复的 sanitizeProfile：预置插件因此被当作内置项，
 +// 原生恢复不会把它们列为「第三方可禁用」（对应 RM-07 / P1-F16）。
 +const PERSONAL_PROFILE_BUNDLES = [
-+  // 2026-10-12 修复：预置市场插件回到官方 bundle 层。三个包也必须留在
++  // 2026-10-12 修复：预置市场插件回到官方 bundle 层。四个包也必须留在
 +  // bundle 名单里，否则插件市场更新后官方 manager 会追加同名 bundle，
 +  // 与旧的固定挂载行形成 duplicate loader entry id。
-+  'dsh-better-sidebar',
 +  'dsh-claude-style',
++  '@tt-a1i/archify-dsh',
 +  '@linxin666/dsh-client-ui-skill-explorer',
++  'dsh-better-sidebar',
 +] as const
 +const DESKTOP_PROFILE_BUNDLES: readonly string[] = [...WEB_PROFILE.bundles, ...PERSONAL_PROFILE_BUNDLES]
  const WORKSPACE_SETTINGS = 'nodeLinker: hoisted\nautoInstallPeers: false\n'
  function writeJson(path: string, value: unknown): void {
    writeFileSync(path, `${JSON.stringify(value, undefined, 2)}\n`, { mode: 0o600 })
-@@ -74,7 +93,7 @@ export class DesktopProjectManager {
+@@ -74,7 +94,7 @@ export class DesktopProjectManager {
     * @returns Backup path after the locked profile write, or undefined if the patch was absent.
     */
    async disableAllPlugins(): Promise<string | undefined> {
@@ -189,7 +191,7 @@ index 270d87d6..6446d9d5 100644
    }
  
    /**
-@@ -87,6 +106,49 @@ export class DesktopProjectManager {
+@@ -87,6 +107,50 @@ export class DesktopProjectManager {
        migrateProfileSettings(this.paths.profile)
        createPluginProfile(this.paths.profile)
        removeLinkProjections(this.paths.profile)
@@ -210,7 +212,8 @@ index 270d87d6..6446d9d5 100644
 +      } catch (error) {
 +        console.warn('desktop project: default model route seed failed:', error)
 +      }
-+      // 个人版插件市场不在 bundle 名单里（T-143 D-1），由 profile 用户层固定行挂载。
++      // 个人版插件市场不在 bundle 名单里（T-143 D-1），由 profile 用户层的显式
++      // 相对路径行挂载；运行时放在 <DSH_HOME>/dshmarket，避开 profile 的 pnpm prune。
 +      try {
 +        if (backfillProfileMarketPlugin(this.paths.profile)) {
 +          console.log('desktop project: seeded the personal plugin market')
@@ -218,11 +221,11 @@ index 270d87d6..6446d9d5 100644
 +      } catch (error) {
 +        console.warn('desktop project: personal plugin market seed failed:', error)
 +      }
-+      // 预置市场插件必须物化进 profile `node_modules`：官方 runtime resolution 只把
++      // 四个预置插件必须物化进 profile `node_modules`：官方 runtime resolution 只把
 +      // 「安装闭包」与「profile manifest 直接依赖且在 profile 里真实存在」两类名字暴露给
-+      // profile 层，而三个预置包只是被随包塞进运行时树、不在安装闭包里 —— 于是它们自己
-+      // patch 的裸包名行 `failed to import`，宿主半边与客户端半包都不存在，插件市场也据此
-+      // 判「未安装/未生效」（2026-10-12 真机 + 隔离探针实证，见 profile-bundle-backfill.ts）。
++      // profile 层，而它们只是被随包塞进运行时树、不在安装闭包里，否则自己的裸包名行会
++      // `failed to import`。市场走显式路径，物化到 <DSH_HOME>/dshmarket，不能留在
++      // profile 依赖树里，否则任意 pnpm 操作都会把它移到 .ignored，并在更新途中卸载自身。
 +      try {
 +        const materialized = materializePresetPlugins(this.paths.profile, this.runtime.dsh)
 +        if (materialized.copied.length > 0) {
@@ -239,7 +242,7 @@ index 270d87d6..6446d9d5 100644
      })
    }
  
-@@ -139,7 +201,7 @@ export function createRuntimeProjectMetadata(projectDir: string, release: Deskto
+@@ -139,7 +203,7 @@ export function createRuntimeProjectMetadata(projectDir: string, release: Deskto
      private: true,
      version: '0.0.0',
      dependencies: desktopCorePackageOverrides(packageSet),
@@ -248,7 +251,7 @@ index 270d87d6..6446d9d5 100644
    }
    writeJson(join(projectDir, 'package.json'), manifest)
    writeFileSync(
-@@ -164,13 +226,25 @@ export function createDevelopmentProjectMetadata(projectDir: string, release: De
+@@ -164,13 +228,25 @@ export function createDevelopmentProjectMetadata(projectDir: string, release: De
        [DSH_PACKAGE]: release.version,
        [DESKTOP_HOST_PACKAGE]: release.version,
      },

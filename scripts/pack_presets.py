@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""个人版预置包集：取回 `dshmarket` + 三个预置插件及其运行闭包。
+"""个人版预置包集：取回 `dshmarket` + 四个预置插件及其运行闭包。
 
 与旧 `pack_enterprise.py` 的区别：
   - 不再打包 `packages/*`、`bundles/*`、`plugins/*`（企业层已迁至 WorkNexus-Enterprise）；
@@ -30,9 +30,10 @@ LOCK = REPO / "configs" / "vendor" / "third-party-bundles.lock.json"
 FETCHER = REPO / "scripts" / "fetch_third_party_bundles.py"
 ROOT_NAMES = (
     "dshmarket",
-    "dsh-better-sidebar",
     "dsh-claude-style",
+    "@tt-a1i/archify-dsh",
     "@linxin666/dsh-client-ui-skill-explorer",
+    "dsh-better-sidebar",
 )
 
 
@@ -92,7 +93,7 @@ def main() -> int:
             print(f"[FAIL] {failure}")
         print(f"结果: 0 [OK] / {len(failures)} [FAIL]")
         return 1
-    print(f"[OK] 4 个预置根 + 运行闭包齐全；无 @worknexus 企业包")
+    print(f"[OK] {len(root_files)} 个预置根 + 运行闭包齐全；无 @worknexus 企业包")
     print(f"结果: {len(produced)} [OK] / 0 [FAIL]")
     return 0
 
