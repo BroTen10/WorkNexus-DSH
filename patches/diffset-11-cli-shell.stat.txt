@@ -1,0 +1,7 @@
+ apps/cli/src/args.ts                      |  2 +-
+ apps/cli/tests/expected/launcher-help.txt |  2 +-
+ apps/desktop/cli/dsh                      |  2 +-
+ apps/desktop/cli/dsh.cmd                  |  2 +-
+ apps/desktop/scripts/prepare-cli.ts       | 18 ++++++++++++++++--
+ apps/desktop/tests/cli-launcher.spec.ts   |  6 +++++-
+ 6 files changed, 25 insertions(+), 7 deletions(-)

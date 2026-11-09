@@ -1,0 +1,37 @@
+{
+  "$comment": "个人版随发行版预置的插件市场 dshmarket 及其运行依赖闭包（版本钉死 + sha256）。T-151 起曾随个人版预置的四个市场插件全部退役，不再进入锁文件、包集或 profile 默认安装；官方 @deepseek-ai/* 默认 bundle 不受本清单管理。登记入口：python scripts/fetch_third_party_bundles.py --add <name>@<version>。",
+  "schemaVersion": 1,
+  "fetchedAt": "2026-11-07",
+  "registry": "https://registry.npmjs.org",
+  "runtimeProvided": {
+    "$comment": "以下包桌面运行时已自带且满足 dshmarket 的声明范围，**不随包重复提供**（避免用 overrides 覆盖上游版本）。实测（%LOCALAPPDATA%\\Programs\\WorkNexus-DSH 安装态与本机 .desktop-build 运行时树一致）：undici 7.29.0 / js-yaml 4.3.2 / argparse 2.0.1；undici 7.29.0 不满足 dshmarket 1.73.14 的 ^7.29.1，故另行随包 undici 7.29.1。",
+    "js-yaml": "^4.1.0（运行时 4.3.2 已满足）",
+    "argparse": "^2.0.1（js-yaml 的依赖，运行时已含）"
+  },
+  "packages": [
+    {
+      "name": "dshmarket",
+      "version": "1.73.14",
+      "role": "bundle-root",
+      "license": "MIT",
+      "url": "https://registry.npmjs.org/dshmarket/-/dshmarket-1.73.14.tgz",
+      "file": "dshmarket-1.73.14.tgz",
+      "bytes": 880527,
+      "sha256": "91f857cb47fc06453af4d449d767a63fc1523002bb4f65f7e3c53e35ae9f3481",
+      "roleLabel": "插件市场 UI（`dsh.bundle.patch` 插入 `dsh-market`）"
+    },
+    {
+      "name": "undici",
+      "version": "7.29.1",
+      "role": "runtime-dependency",
+      "license": "MIT",
+      "url": "https://registry.npmjs.org/undici/-/undici-7.29.1.tgz",
+      "file": "undici-7.29.1.tgz",
+      "bytes": 400243,
+      "sha256": "93b3abe22a9d2858938b5f3829a9fd8952392348ffed9057662ae846e2e46d54",
+      "normalization": "strip-dotfile-placeholders",
+      "normalizedSha256": "7b57ab002ad85acbabf95c6d388da87ba64090e12309868111fb8d951fe64132",
+      "note": "dshmarket 1.66.45 的 dependencies 要求 ^7.29.1（运行时自带的 7.29.0 不满足该范围），因此必须随包提供；上游 tarball 含 lib/llhttp/.gitkeep，按规范化规则剔除后发布。"
+    }
+  ]
+}

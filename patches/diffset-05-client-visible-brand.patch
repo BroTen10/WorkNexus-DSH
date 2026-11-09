@@ -1,0 +1,209 @@
+diff --git a/apps/web/tests/expected/plugin-install-cancel/cancelled.expected.md b/apps/web/tests/expected/plugin-install-cancel/cancelled.expected.md
+index 5c879f78..32eda551 100644
+--- a/apps/web/tests/expected/plugin-install-cancel/cancelled.expected.md
++++ b/apps/web/tests/expected/plugin-install-cancel/cancelled.expected.md
+@@ -7,5 +7,5 @@
+     - text: slow-package
+   - button "插件安装引导和示例"
+   - button "安装源 默认安装源"
+-  - note: 请确认插件来源可信。插件在本机以你的权限运行，来源不明的插件可能损坏 DeepSeek Harness，或读取和泄露你的数据。 按需安装的官方插件会在版本与 DSH 不同时提供“更新”。其他插件请先卸载再安装新版。
++  - note: 请确认插件来源可信。插件在本机以你的权限运行，来源不明的插件可能损坏 WorkNexus-DSH，或读取和泄露你的数据。 按需安装的官方插件会在版本与 DSH 不同时提供“更新”。其他插件请先卸载再安装新版。
+   - button "安装"
+diff --git a/apps/web/tests/expected/plugin-install-github/another-way.expected.md b/apps/web/tests/expected/plugin-install-github/another-way.expected.md
+index feb0fbe8..3d4c7dd1 100644
+--- a/apps/web/tests/expected/plugin-install-github/another-way.expected.md
++++ b/apps/web/tests/expected/plugin-install-github/another-way.expected.md
+@@ -10,5 +10,5 @@
+       - text: 填入插件 npm 包名 插件包名即 npm 包名（如 dsh-xxx 或 @作者/插件名），社区插件的 README 安装命令中 dsh plugin add 或 pnpm add 之后的部分。 示例：
+       - code: dsh-plugin-whale-pet
+       - button "填入示例 dsh-plugin-whale-pet": 填入示例
+-  - note: 请确认插件来源可信。插件在本机以你的权限运行，来源不明的插件可能损坏 DeepSeek Harness，或读取和泄露你的数据。 按需安装的官方插件会在版本与 DSH 不同时提供“更新”。其他插件请先卸载再安装新版。
++  - note: 请确认插件来源可信。插件在本机以你的权限运行，来源不明的插件可能损坏 WorkNexus-DSH，或读取和泄露你的数据。 按需安装的官方插件会在版本与 DSH 不同时提供“更新”。其他插件请先卸载再安装新版。
+   - button "安装" [disabled]
+diff --git a/apps/web/tests/expected/plugin-install-github/mirror.expected.md b/apps/web/tests/expected/plugin-install-github/mirror.expected.md
+index e4403baf..9ae276aa 100644
+--- a/apps/web/tests/expected/plugin-install-github/mirror.expected.md
++++ b/apps/web/tests/expected/plugin-install-github/mirror.expected.md
+@@ -5,5 +5,5 @@
+     - /placeholder: 例如 dsh-plugin-whale-pet
+   - button "插件安装引导和示例"
+   - button "安装源 中国大陆镜像源"
+-  - note: 请确认插件来源可信。插件在本机以你的权限运行，来源不明的插件可能损坏 DeepSeek Harness，或读取和泄露你的数据。 按需安装的官方插件会在版本与 DSH 不同时提供“更新”。其他插件请先卸载再安装新版。
++  - note: 请确认插件来源可信。插件在本机以你的权限运行，来源不明的插件可能损坏 WorkNexus-DSH，或读取和泄露你的数据。 按需安装的官方插件会在版本与 DSH 不同时提供“更新”。其他插件请先卸载再安装新版。
+   - button "安装" [disabled]
+diff --git a/packages/client/ui-plugin-manager/src/client/locales.ts b/packages/client/ui-plugin-manager/src/client/locales.ts
+index 6b31b7ff..d3e2df10 100644
+--- a/packages/client/ui-plugin-manager/src/client/locales.ts
++++ b/packages/client/ui-plugin-manager/src/client/locales.ts
+@@ -85,7 +85,7 @@ export const zh = {
+   installPathTemplateHint: '请替换为本机插件目录的实际路径',
+   installGuideFill: '填入示例',
+   installGuideFillAria: '填入示例 {example}',
+-  installGuideSafety: '请确认插件来源可信。插件在本机以你的权限运行，来源不明的插件可能损坏 DeepSeek Harness，或读取和泄露你的数据。',
++  installGuideSafety: '请确认插件来源可信。插件在本机以你的权限运行，来源不明的插件可能损坏 WorkNexus-DSH，或读取和泄露你的数据。',
+   installUpgradeNotice: '按需安装的官方插件会在版本与 DSH 不同时提供“更新”。其他插件请先卸载再安装新版。',
+   registryToggle: '安装源',
+   registryLegend: '从哪个 npm 源下载插件',
+@@ -383,7 +383,7 @@ export const en = {
+   installPathTemplateHint: 'Replace this with the actual path to your local plugin directory.',
+   installGuideFill: 'Use example',
+   installGuideFillAria: 'Use the example {example}',
+-  installGuideSafety: 'Install only plugins you trust: they run with your permissions and can damage DeepSeek Harness or leak your data.',
++  installGuideSafety: 'Install only plugins you trust: they run with your permissions and can damage WorkNexus-DSH or leak your data.',
+   installUpgradeNotice: 'On-demand official plugins offer Update when their version differs from DSH. To update other plugins, uninstall and reinstall them.',
+   registryToggle: 'Registry',
+   registryLegend: 'The npm registry the plugin is downloaded from',
+@@ -681,7 +681,7 @@ export const ja = {
+   'installPathTemplateHint': 'ローカルプラグインディレクトリの実際のパスに置き換えてください。',
+   'installGuideFill': '例を使用',
+   'installGuideFillAria': '例{example}を使用',
+-  'installGuideSafety': '信頼できるプラグインのみをインストールしてください。プラグインはあなたの権限で動作し、DeepSeek Harnessを破壊したりデータを漏洩させたりする可能性があります。',
++  'installGuideSafety': '信頼できるプラグインのみをインストールしてください。プラグインはあなたの権限で動作し、WorkNexus-DSHを破壊したりデータを漏洩させたりする可能性があります。',
+   'installUpgradeNotice': 'オンデマンドの公式プラグインは、バージョンがDSHと異なる場合に更新を提供します。その他のプラグインを更新するには、アンインストールして再インストールしてください。',
+   'registryToggle': 'レジストリ',
+   'registryLegend': 'プラグインのダウンロード元のnpmレジストリ',
+@@ -974,7 +974,7 @@ export const es = {
+   installPathTemplateHint: 'Reemplace esto con la ruta real a su directorio de complementos local.',
+   installGuideFill: 'ejemplo de uso',
+   installGuideFillAria: 'Utilice el ejemplo {example}',
+-  installGuideSafety: 'Instale sólo complementos en los que confíe: se ejecutan con sus permisos y pueden dañar DeepSeek Harness o filtrar sus datos.',
++  installGuideSafety: 'Instale sólo complementos en los que confíe: se ejecutan con sus permisos y pueden dañar WorkNexus-DSH o filtrar sus datos.',
+   installUpgradeNotice: 'Los complementos oficiales bajo demanda ofrecen actualización cuando su versión difiere de DSH. Para actualizar otros complementos, desinstálelos y vuelva a instalarlos.',
+   registryToggle: 'Registro',
+   registryLegend: 'El registro npm desde el que se descarga el complemento',
+@@ -1269,7 +1269,7 @@ export const fr = {
+   installPathTemplateHint: 'Remplacez-le par le chemin réel vers votre répertoire de plugin local.',
+   installGuideFill: "Utiliser l'exemple",
+   installGuideFillAria: "Utilisez l'exemple {example}",
+-  installGuideSafety: "Installez uniquement les plugins en qui vous avez confiance : ils s'exécutent avec vos autorisations et peuvent endommager DeepSeek Harness ou divulguer vos données.",
++  installGuideSafety: "Installez uniquement les plugins en qui vous avez confiance : ils s'exécutent avec vos autorisations et peuvent endommager WorkNexus-DSH ou divulguer vos données.",
+   installUpgradeNotice: "Les plugins officiels à la demande proposent la mise à jour lorsque leur version diffère de DSH. Pour mettre à jour d'autres plugins, désinstallez-les et réinstallez-les.",
+   registryToggle: 'Registre',
+   registryLegend: 'Le registre npm à partir duquel le plugin est téléchargé',
+@@ -1564,7 +1564,7 @@ export const de = {
+   installPathTemplateHint: 'Ersetzen Sie dies durch den tatsächlichen Pfad zu Ihrem lokalen Plugin-Verzeichnis.',
+   installGuideFill: 'Beispiel verwenden',
+   installGuideFillAria: 'Verwenden Sie das Beispiel {example}',
+-  installGuideSafety: 'Installieren Sie nur Plugins, denen Sie vertrauen: Sie werden mit Ihren Berechtigungen ausgeführt und können DeepSeek Harness beschädigen oder Ihre Daten preisgeben.',
++  installGuideSafety: 'Installieren Sie nur Plugins, denen Sie vertrauen: Sie werden mit Ihren Berechtigungen ausgeführt und können WorkNexus-DSH beschädigen oder Ihre Daten preisgeben.',
+   installUpgradeNotice: 'Offizielle On-Demand-Plugins bieten Updates an, wenn ihre Version von DSH abweicht. Um andere Plugins zu aktualisieren, deinstallieren Sie sie und installieren Sie sie erneut.',
+   registryToggle: 'Registrierung',
+   registryLegend: 'Die NPM-Registrierung, aus der das Plugin heruntergeladen wird',
+@@ -1859,7 +1859,7 @@ export const ru = {
+   installPathTemplateHint: 'Замените это фактическим путем к вашему локальному каталогу плагина.',
+   installGuideFill: 'Используйте пример',
+   installGuideFillAria: 'Используйте пример {example}',
+-  installGuideSafety: 'Устанавливайте только те плагины, которым вы доверяете: они запускаются с вашими разрешениями и могут повредить DeepSeek Harness или привести к утечке ваших данных.',
++  installGuideSafety: 'Устанавливайте только те плагины, которым вы доверяете: они запускаются с вашими разрешениями и могут повредить WorkNexus-DSH или привести к утечке ваших данных.',
+   installUpgradeNotice: 'Официальные плагины по требованию предлагают обновление, если их версия отличается от DSH. Чтобы обновить другие плагины, удалите и переустановите их.',
+   registryToggle: 'Реестр',
+   registryLegend: 'Реестр npm, из которого загружается плагин.',
+@@ -2154,7 +2154,7 @@ export const pt = {
+   installPathTemplateHint: 'Substitua isso pelo caminho real para o diretório local do plugin.',
+   installGuideFill: 'Exemplo de uso',
+   installGuideFillAria: 'Use o exemplo {example}',
+-  installGuideSafety: 'Instale apenas plug-ins em que você confia: eles são executados com suas permissões e podem danificar DeepSeek Harness ou vazar seus dados.',
++  installGuideSafety: 'Instale apenas plug-ins em que você confia: eles são executados com suas permissões e podem danificar WorkNexus-DSH ou vazar seus dados.',
+   installUpgradeNotice: 'Plug-ins oficiais sob demanda oferecem atualização quando sua versão é diferente de DSH. Para atualizar outros plug-ins, desinstale-os e reinstale-os.',
+   registryToggle: 'Registro',
+   registryLegend: 'O registro npm do qual o plugin é baixado',
+diff --git a/scripts/client-build-environment.client.spec.ts b/scripts/client-build-environment.client.spec.ts
+index 43482848..5f16f33e 100644
+--- a/scripts/client-build-environment.client.spec.ts
++++ b/scripts/client-build-environment.client.spec.ts
+@@ -85,7 +85,7 @@ describe('client build environment', () => {
+     const expected = {
+       DSH_CLIENT_BUILD_PROFILE: 'official',
+       DSH_CLIENT_COMMIT_HASH: COMMIT_HASH.slice(0, 7),
+-      DSH_CLIENT_TITLE: 'DeepSeek Harness',
++      DSH_CLIENT_TITLE: 'WorkNexus-DSH',
+       DSH_CLIENT_VERSION: '1.2.3',
+     } as const
+ 
+@@ -115,7 +115,7 @@ describe('client build environment', () => {
+     expect(resolveClientBuildEnvironment(parent)).toEqual({
+       DSH_CLIENT_BUILD_PROFILE: 'official',
+       DSH_CLIENT_COMMIT_HASH: COMMIT_HASH.slice(0, 7),
+-      DSH_CLIENT_TITLE: 'DeepSeek Harness',
++      DSH_CLIENT_TITLE: 'WorkNexus-DSH',
+       DSH_CLIENT_VERSION: '1.2.3',
+     })
+     expect(() => {
+@@ -131,13 +131,13 @@ describe('client build environment', () => {
+     expect(clientBuildProcessEnvironment(parent, {
+       DSH_CLIENT_BUILD_PROFILE: 'official',
+       DSH_CLIENT_COMMIT_HASH: COMMIT_HASH.slice(0, 7),
+-      DSH_CLIENT_TITLE: 'DeepSeek Harness',
++      DSH_CLIENT_TITLE: 'WorkNexus-DSH',
+       DSH_CLIENT_VERSION: '1.2.3',
+     })).toEqual({
+       PATH: '/bin',
+       DSH_CLIENT_BUILD_PROFILE: 'official',
+       DSH_CLIENT_COMMIT_HASH: COMMIT_HASH.slice(0, 7),
+-      DSH_CLIENT_TITLE: 'DeepSeek Harness',
++      DSH_CLIENT_TITLE: 'WorkNexus-DSH',
+       DSH_CLIENT_VERSION: '1.2.3',
+     })
+     expect(repositoryCommitHash('/unused', { DSH_CLIENT_COMMIT_HASH: COMMIT_HASH })).toBe(COMMIT_HASH.slice(0, 7))
+@@ -147,7 +147,7 @@ describe('client build environment', () => {
+     const parent = {
+       DSH_BUILD_CLIENT_PROFILE: 'official',
+       DSH_CLIENT_BUILD_PROFILE: 'official',
+-      DSH_CLIENT_TITLE: 'DeepSeek Harness',
++      DSH_CLIENT_TITLE: 'WorkNexus-DSH',
+       DSH_CLIENT_COMMIT_HASH: COMMIT_HASH.slice(0, 7),
+       DSH_CLIENT_VERSION: '1.2.3',
+       DSH_CLIENT_GIT_DIRTY: dirty,
+@@ -165,7 +165,7 @@ describe('client build environment', () => {
+     expect(resolveClientBuildEnvironment({ ...parent, ...local }, 'official')).toEqual({
+       DSH_CLIENT_BUILD_PROFILE: 'official',
+       DSH_CLIENT_COMMIT_HASH: COMMIT_HASH.slice(0, 7),
+-      DSH_CLIENT_TITLE: 'DeepSeek Harness',
++      DSH_CLIENT_TITLE: 'WorkNexus-DSH',
+       DSH_CLIENT_VERSION: '1.2.3',
+     })
+   })
+@@ -196,7 +196,7 @@ describe('client build environment', () => {
+     expect(officialClientBuildEnvironment(fixtureRoot)).toEqual({
+       DSH_CLIENT_BUILD_PROFILE: 'official',
+       DSH_CLIENT_COMMIT_HASH: commit,
+-      DSH_CLIENT_TITLE: 'DeepSeek Harness',
++      DSH_CLIENT_TITLE: 'WorkNexus-DSH',
+       DSH_CLIENT_VERSION: '1.2.3-rc.4',
+     })
+ 
+@@ -305,7 +305,7 @@ describe('client build environment', () => {
+     const officialEnvironment = {
+       DSH_CLIENT_BUILD_PROFILE: 'official',
+       DSH_CLIENT_COMMIT_HASH: COMMIT_HASH.slice(0, 7),
+-      DSH_CLIENT_TITLE: 'DeepSeek Harness',
++      DSH_CLIENT_TITLE: 'WorkNexus-DSH',
+       DSH_CLIENT_VERSION: '1.2.3',
+     }
+     const official = buildFixture(officialEnvironment)
+diff --git a/scripts/client-build-environment.ts b/scripts/client-build-environment.ts
+index 6eed371b..bf1bdf94 100644
+--- a/scripts/client-build-environment.ts
++++ b/scripts/client-build-environment.ts
+@@ -19,7 +19,7 @@ export const CLIENT_BUILD_PROFILE_SELECTOR = 'DSH_BUILD_CLIENT_PROFILE'
+ /** Public client environment required by official DSH artifacts. */
+ const OFFICIAL_CLIENT_BUILD_ENVIRONMENT = {
+   DSH_CLIENT_BUILD_PROFILE: 'official',
+-  DSH_CLIENT_TITLE: 'DeepSeek Harness',
++  DSH_CLIENT_TITLE: 'WorkNexus-DSH',
+ } as const
+ 
+ /** Public variable carrying the source commit embedded in client artifacts. */
+diff --git a/scripts/dev-web.spec.ts b/scripts/dev-web.spec.ts
+index d22b1d88..b4b17ca8 100644
+--- a/scripts/dev-web.spec.ts
++++ b/scripts/dev-web.spec.ts
+@@ -119,7 +119,7 @@ it('samples one local environment at startup without validating watcher outputs'
+     writeClientBuildRecord(root, {
+       DSH_CLIENT_BUILD_PROFILE: 'official',
+       DSH_CLIENT_COMMIT_HASH: 'fffffff',
+-      DSH_CLIENT_TITLE: 'DeepSeek Harness',
++      DSH_CLIENT_TITLE: 'WorkNexus-DSH',
+       DSH_CLIENT_VERSION: '1.2.2',
+     })
+     await writeFile(join(root, 'packages/client/example/lib/client.js'), 'module.exports = { changed: true }\n')

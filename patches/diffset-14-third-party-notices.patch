@@ -1,0 +1,81 @@
+diff --git a/WORKNEXUS-THIRD-PARTY-NOTICES.md b/WORKNEXUS-THIRD-PARTY-NOTICES.md
+new file mode 100644
+index 00000000..e5b0b505
+--- /dev/null
++++ b/WORKNEXUS-THIRD-PARTY-NOTICES.md
+@@ -0,0 +1,75 @@
++<!-- 由 scripts/gen_worknexus_notices.py 生成 —— 请勿手工编辑。
++     重新生成：python scripts/gen_worknexus_notices.py
++     校验：python scripts/verify_diffset14_third_party_notices.py -->
++
++# WorkNexus-DSH 发行版第三方组件声明
++
++本文件是**发行版附加声明**，与上游生成的 `THIRD_PARTY_NOTICES.md` 并存、互不替代。
++上游生成器只扫描上游 pnpm workspace 的 `package.json`，因此**以 tgz 分层随发行版预置**的组件
++不在其中；本文件补齐这部分（合规依据：需求书 P1-F17 与 §4.1.5 第 9 条）。
++
++## 1. 随发行版预置的第三方组件
++
++| 组件 | 版本 | 许可证 | 上游来源 | 在本发行版中的角色 |
++| --- | --- | --- | --- | --- |
++| `dshmarket` | 1.73.14 | MIT | https://registry.npmjs.org/dshmarket/-/dshmarket-1.73.14.tgz | 插件市场 UI（`dsh.bundle.patch` 插入 `dsh-market`） |
++| `undici` | 7.29.1 | MIT | https://registry.npmjs.org/undici/-/undici-7.29.1.tgz | 插件市场的声明依赖（版本钉死随包，保证离线安装与可复现） |
++
++## 2. 我方自研组件
++
++本仓为 WorkNexus-DSH 个人版宿主仓，不承载 `@worknexus/*` 自研包；企业层组件在
++`WorkNexus-Enterprise` 单独登记，不随本发行版分发。
++
++## 3. 许可证原文
++
++### `dshmarket` 1.73.14（MIT）
++
++```
++MIT License
++
++Copyright (c) 2026 fkysly and dsh-market contributors
++
++Permission is hereby granted, free of charge, to any person obtaining a copy
++of this software and associated documentation files (the "Software"), to deal
++in the Software without restriction, including without limitation the rights
++to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
++copies of the Software, and to permit persons to whom the Software is
++furnished to do so, subject to the following conditions:
++
++The above copyright notice and this permission notice shall be included in all
++copies or substantial portions of the Software.
++
++THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
++IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
++AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
++LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
++OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
++SOFTWARE.
++```
++
++### `undici` 7.29.1（MIT）
++
++```
++MIT License
++
++Copyright (c) Matteo Collina and Undici contributors
++
++Permission is hereby granted, free of charge, to any person obtaining a copy
++of this software and associated documentation files (the "Software"), to deal
++in the Software without restriction, including without limitation the rights
++to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
++copies of the Software, and to permit persons to whom the Software is
++furnished to do so, subject to the following conditions:
++
++The above copyright notice and this permission notice shall be included in all
++copies or substantial portions of the Software.
++
++THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
++IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
++AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
++LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
++OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
++SOFTWARE.
++```

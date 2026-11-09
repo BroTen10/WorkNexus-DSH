@@ -1,0 +1,106 @@
+diff --git a/apps/cli/src/args.ts b/apps/cli/src/args.ts
+index 41d4ebea..398aa87f 100644
+--- a/apps/cli/src/args.ts
++++ b/apps/cli/src/args.ts
+@@ -153,7 +153,7 @@ export function parseDshArgs(argv: readonly string[], version: string, manageDes
+     .name('dsh')
+     .version(version, '-V, --version', 'output the version number')
+     .usage('[--profile] <name> [options] [app-args...]\n       dsh plugin --profile <name> <pnpm-args...>')
+-    .description('dsh: boot a DeepSeek Harness profile — an ordered stack of plugin-bundle patch layers under your own overrides.')
++    .description('dsh: boot a WorkNexus-DSH profile — an ordered stack of plugin-bundle patch layers under your own overrides.')
+     .addHelpText('after', HELP_EXAMPLES)
+     .exitOverride()
+     // The launcher's flags come first and end at the first token it does not
+diff --git a/apps/cli/tests/expected/launcher-help.txt b/apps/cli/tests/expected/launcher-help.txt
+index c3b56ad6..42542b56 100644
+--- a/apps/cli/tests/expected/launcher-help.txt
++++ b/apps/cli/tests/expected/launcher-help.txt
+@@ -1,7 +1,7 @@
+ Usage: dsh [--profile] <name> [options] [app-args...]
+        dsh plugin --profile <name> <pnpm-args...>
+ 
+-dsh: boot a DeepSeek Harness profile — an ordered stack of plugin-bundle patch
++dsh: boot a WorkNexus-DSH profile — an ordered stack of plugin-bundle patch
+ layers under your own overrides.
+ 
+ Arguments:
+diff --git a/apps/desktop/cli/dsh b/apps/desktop/cli/dsh
+index ee657a3d..ea55c180 100644
+--- a/apps/desktop/cli/dsh
++++ b/apps/desktop/cli/dsh
+@@ -11,4 +11,4 @@ while [ -L "$launcher" ]; do
+   esac
+ done
+ resources=$(CDPATH= cd -- "$(dirname -- "$launcher")/../../.." && pwd -P)
+-ELECTRON_RUN_AS_NODE=1 exec "$resources/../MacOS/DeepSeek Harness" --expose-internals "$resources/app.asar/dsh/node_modules/@deepseek-ai/dsh-desktop-host/lib/cli.js" "$@"
++ELECTRON_RUN_AS_NODE=1 exec "$resources/../MacOS/__DSH_DESKTOP_PRODUCT_NAME__" --expose-internals "$resources/app.asar/dsh/node_modules/@deepseek-ai/dsh-desktop-host/lib/cli.js" "$@"
+diff --git a/apps/desktop/cli/dsh.cmd b/apps/desktop/cli/dsh.cmd
+index 73af3353..f8508258 100644
+--- a/apps/desktop/cli/dsh.cmd
++++ b/apps/desktop/cli/dsh.cmd
+@@ -1,5 +1,5 @@
+ @echo off
+ setlocal DisableDelayedExpansion
+ set "ELECTRON_RUN_AS_NODE=1"
+-"%~dp0..\..\..\..\DeepSeek Harness.exe" --expose-internals "%~dp0..\..\..\app.asar\dsh\node_modules\@deepseek-ai\dsh-desktop-host\lib\cli.js" %*
++"%~dp0..\..\..\..\__DSH_DESKTOP_PRODUCT_NAME__.exe" --expose-internals "%~dp0..\..\..\app.asar\dsh\node_modules\@deepseek-ai\dsh-desktop-host\lib\cli.js" %*
+ exit /b %errorlevel%
+diff --git a/apps/desktop/scripts/prepare-cli.ts b/apps/desktop/scripts/prepare-cli.ts
+index d2b9e142..a2bc5d26 100644
+--- a/apps/desktop/scripts/prepare-cli.ts
++++ b/apps/desktop/scripts/prepare-cli.ts
+@@ -1,7 +1,17 @@
+ /** Package terminal launch scripts that reuse the installed Electron runtime. */
+ 
+-import { chmodSync, copyFileSync, mkdirSync } from 'node:fs'
++import { chmodSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+ import { join } from 'node:path'
++import { DESKTOP_PRODUCT_NAME } from './desktop-product-name.mjs'
++
++/**
++ * 发行版产品名在 launcher 资产里的占位符（企业差异集 11）。
++ *
++ * launcher 是 shell / cmd 资产，无法 import 产品名常量；因此资产携带占位符，
++ * 由本模块在打包时就地替换成唯一来源 `desktop-product-name.mjs` 的值。
++ * 这样「安装态 CLI 壳指向哪个可执行文件」不会被写死在资产里。
++ */
++const PRODUCT_NAME_TOKEN = '__DSH_DESKTOP_PRODUCT_NAME__'
+ 
+ /**
+  * Copy the platform launcher into the application's public command directory.
+@@ -12,6 +22,10 @@ export function prepareDesktopCli(destination: string, platform: 'darwin' | 'win
+   const name = platform === 'win32' ? 'dsh.cmd' : 'dsh'
+   const command = join(destination, 'bin', name)
+   mkdirSync(join(destination, 'bin'), { recursive: true })
+-  copyFileSync(join(import.meta.dirname, '..', 'cli', name), command)
++  const template = readFileSync(join(import.meta.dirname, '..', 'cli', name), 'utf8')
++  if (!template.includes(PRODUCT_NAME_TOKEN)) {
++    throw new Error(`desktop cli launcher ${name} does not carry ${PRODUCT_NAME_TOKEN}`)
++  }
++  writeFileSync(command, template.replaceAll(PRODUCT_NAME_TOKEN, DESKTOP_PRODUCT_NAME))
+   if (platform === 'darwin') chmodSync(command, 0o755)
+ }
+diff --git a/apps/desktop/tests/cli-launcher.spec.ts b/apps/desktop/tests/cli-launcher.spec.ts
+index 67e38da2..6fbda7db 100644
+--- a/apps/desktop/tests/cli-launcher.spec.ts
++++ b/apps/desktop/tests/cli-launcher.spec.ts
+@@ -7,6 +7,7 @@ import { tmpdir } from 'node:os'
+ import { dirname, join, relative } from 'node:path'
+ import { expect, it, onTestFinished } from 'vitest'
+ import { prepareDesktopCli } from '../scripts/prepare-cli.ts'
++import { DESKTOP_PRODUCT_NAME } from '../scripts/desktop-product-name.mjs'
+ 
+ function fixture() {
+   const root = realpathSync(mkdtempSync(join(tmpdir(), 'dsh-cli-launcher-')))
+@@ -24,7 +25,10 @@ function fixture() {
+   const resources = join(application, ...platform === 'darwin' ? ['Contents', 'Resources'] : ['resources'])
+   const cli = join(resources, 'runtime', 'cli')
+   prepareDesktopCli(cli, platform)
+-  const electron = join(application, ...platform === 'darwin' ? ['Contents', 'MacOS', 'DeepSeek Harness'] : ['DeepSeek Harness.exe'])
++  // 可执行文件名跟随产品名单一来源（差异集 11）：launcher 资产不再写死上游名。
++  const electron = join(application, ...platform === 'darwin'
++    ? ['Contents', 'MacOS', DESKTOP_PRODUCT_NAME]
++    : [`${DESKTOP_PRODUCT_NAME}.exe`])
+   mkdirSync(dirname(electron), { recursive: true })
+   if (platform === 'win32') copyFileSync(process.execPath, electron)
+   else symlinkSync(process.execPath, electron)
